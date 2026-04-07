@@ -322,17 +322,16 @@ void pushListaBlocoLivre(Disco disco[], int endereco)
     }
 }
 
-// PAREI AQUI (GUILHERME)
-
+//retira um bloco livre da lista
 int popListaBlocoLivre(Disco disco[])
 {
     int enderecoLivre;
     int enderecoBlocoAtual = ENDERECO_CABECA_LISTA;
     int enderecoProxBloco = disco[enderecoBlocoAtual].lbl.enderecoBlocoProx;
 
-    if (!isEmptyListaBlocoLivre(disco[enderecoBlocoAtual].lbl)) // há elementos na lista
+    if (!isEmptyListaBlocoLivre(disco[enderecoBlocoAtual].lbl)) //verifica se tem elementos na lista
     {
-        if (isEnderecoNull(enderecoProxBloco)) // se for igual a -1, significa que não há próximo bloco da lista
+        if (isEnderecoNull(enderecoProxBloco)) //se for igual a -1, quer dizer que nao ha proximo bloco da lista
         {
             enderecoLivre = disco[ENDERECO_CABECA_LISTA].lbl.endereco[disco[ENDERECO_CABECA_LISTA].lbl.topo--];
 
@@ -345,7 +344,7 @@ int popListaBlocoLivre(Disco disco[])
         {
             int enderecoBlocoAnterior = enderecoBlocoAtual;
 
-            while (isEnderecoValido(enderecoProxBloco)) // significa que a lista contém mais de um bloco, então percorre até o Último da lista
+            while (isEnderecoValido(enderecoProxBloco)) // significa que a lista tem mais de um bloco, entao percorre ate o fim da lista
             {
                 enderecoBlocoAnterior = enderecoBlocoAtual;
                 enderecoBlocoAtual = enderecoProxBloco;
@@ -354,8 +353,8 @@ int popListaBlocoLivre(Disco disco[])
 
             enderecoLivre = disco[enderecoBlocoAtual].lbl.endereco[disco[enderecoBlocoAtual].lbl.topo--];
 
-            // caso o bloco atual não tenha mais nenhum item após a remoção, altera o apontamento do anterior para -1
-            if (isEmptyListaBlocoLivre(disco[enderecoBlocoAtual].lbl))
+            // caso o bloco atual nao tenha mais nenhum item apos a remocao, altera o apontamento do anterior para -1
+            if(isEmptyListaBlocoLivre(disco[enderecoBlocoAtual].lbl))
             {
                 // bloco anterior para de apontar para o bloco atual, quebrando a lista
                 setEnderecoNull(disco[enderecoBlocoAnterior].lbl.enderecoBlocoProx);
@@ -371,6 +370,7 @@ int popListaBlocoLivre(Disco disco[])
     return getEnderecoNull();
 }
 
+//exibe todos os blocos livres da lista
 void exibeListaBlocoLivre(Disco disco[])
 {
     int i = 0, topo;
@@ -409,12 +409,12 @@ int criarINodeIndireto(Disco disco[])
     return blocoLivreInodeIndireto;
 }
 
-// utilizado para inserir ao criar o inode
+//utilizado para inserir ao criar o inode
 void inserirInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int enderecoInodePrincipal, int &quantidadeBlocosNecessarios, int InseridoPeloTriplo = 0)
 {
     int quantidadeBlocosUtilizados = 0;
-    // verifica se a quantidade de Endereços no inode indireto não está cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL < MAX_INODEINDIRETO - InseridoPeloTriplo)
+    //verifica se a quantidade de enderecos no inode indireto nao esta cheio
+    if(disco[enderecoInodeIndireto].inodeIndireto.TL < MAX_INODEINDIRETO - InseridoPeloTriplo)
     {
         int inicio = disco[enderecoInodeIndireto].inodeIndireto.TL;
         // adiciona novos blocos enquanto a quantidade for menor que o necessário e que não esteja cheio
@@ -2113,11 +2113,14 @@ bool touch(Disco disco[], int enderecoInodeAtual, int enderecoInodeRaiz, char co
     int endereco = getEnderecoNull();
     vector<string> vetorStringSeparado = split(comandoString, ' ');
 
-    if (vetorStringSeparado.size() == 2 && lastPosition(split(vetorStringSeparado.at(0), '/')).size() <= MAX_NOME_ARQUIVO)
+    if (vetorStringSeparado.size() >= 1 && vetorStringSeparado.size() <= 2 && lastPosition(split(vetorStringSeparado.at(0), '/')).size() <= MAX_NOME_ARQUIVO)
     {
         char nomeArquivo[vetorStringSeparado.at(0).size() + 1];
         strcpy(nomeArquivo, vetorStringSeparado.at(0).c_str());
-        int tamanhoArquivo = atoi(vetorStringSeparado.at(1).c_str());
+        int tamanhoArquivo = 0;
+        
+        if (vetorStringSeparado.size() == 2)
+        	tamanhoArquivo = atoi(vetorStringSeparado.at(1).c_str());
 
         int enderecoInodeOrigem = cd(disco, enderecoInodeAtual, nomeArquivo, enderecoInodeRaiz, caminhoAux);
         vetorStringSeparado = splitPath(nomeArquivo);
