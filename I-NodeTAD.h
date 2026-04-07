@@ -52,92 +52,87 @@ void textcolor (int color)
 
 // INODE CONTROLA COMO ESTÁ SENDO GRAVADO O ARQUIVO, EM QUAIS BLOCOS ESTÁ GRAVADO O CONTEÚDO DO ARQUIVO, AS PERMISSÕES, DATA
 struct INode
-{ // Inode principal
+{
     /*
-        DEFINIÇÃO DO QUE O I-NODE ESTÁ APONTANDO:
-        [0] 'd' = DIRETÓRIO, '-' = ARQUIVO, 'l' = LINK
+        Campo de protecao (estilo Linux):
 
-        PERMISSÕES:
-        [1] - [3] (rwx) -> OWNER
-        [4] - [6] (rwx) -> GROUP
-        [7] - [9] (rwx) -> OTHERS
+        [0]  -> Tipo:
+               'd' = diretorio
+               '-' = arquivo regular
+               'l' = link
 
-        [10] - '\0'
+        [1-3] -> permissoes do proprietario (rwx)
+        [4-6] -> permissoes do grupo (rwx)
+        [7-9] -> permissoes de outros (rwx)
+
+        [10]  -> '\0' (fim da string)
     */
     char protecao[11];
 
-    /*Contador do números de entradas no diretório que apontam para o i-node;*/
+    //numero de links fisicos apontando para este inode
     int contadorLinkFisico;
 
-    /*Código do proprietário do arquivo*/
+    //identificacao do dono e grupo
     int proprietario;
-    /*Código do grupo do arquivo*/
     int grupo;
 
-    /*data de criação do arquivo*/
+    //datas (armazenadas como string)
     char dataCriacao[20];
-    /*data de Último acesso do arquivo*/
     char dataUltimoAcesso[20];
-    /*data de Última alteração do arquivo*/
     char dataUltimaAlteracao[20];
 
-    /*Tamanho em bytes do arquivo apontado*/
+    //tamanho do arquivo em bytes
     long long int tamanhoArquivo;
 
-    /*Endereços de blocos que armazenam o conteúdo do arquivo */
-    /*5 primeiros para alocação direta*/
+    /*
+        ponteiros para blocos de dados:
+
+        - enderecoDireto: até 5 blocos diretos
+        - enderecoSimplesIndireto: aponta para um bloco que contem outros ponteiros
+        - enderecoDuploIndireto: ponteiro para bloco de ponteiros de ponteiros
+        - enderecoTriploIndireto: nivel mais profundo de indirecao
+    */
     int enderecoDireto[5];
-    /*6° ponteiro para aalocação simples indireta*/
     int enderecoSimplesIndireto;
-    /*7° para alocação dupla indireta*/
     int enderecoDuploIndireto;
-    /*8° para alocaçãoo tripla-indireta*/
     int enderecoTriploIndireto;
 };
-typedef struct INode INode;
 
-/*UTILIZADO COMO INTERMÉDIO PARA APONTAR PARA MAIS ENDEREÇOS*/
+//utilizado como um intermediario para apontar para mais outros enderecos
 struct INodeIndireto
 {
     int endereco[MAX_INODEINDIRETO];
     int TL;
 };
-typedef INodeIndireto INodeIndireto;
 
 struct Arquivo
 {
     int enderecoINode;
     char nome[MAX_NOME_ARQUIVO];
 };
-typedef struct Arquivo Arquivo;
 
 struct Diretorio
 {
     Arquivo arquivo[DIRETORIO_LIMITE_ARQUIVOS];
     int TL;
 };
-typedef struct Diretorio Diretorio;
 
 struct LinkSimbolico
 {
     string caminho;
 };
-typedef struct LinkSimbolico LinkSimbolico;
 
-// A PILHA DE DISCOS
+//pilha de discos
 struct ListaBlocoLivre
 {
     int topo;
     int endereco[QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE];
-    // endereço do próximo bloco de pilha no disco
-    int enderecoBlocoProx;
+    int enderecoBlocoProx;//endreco do proximo bloco de pilha no disco
 };
-typedef struct ListaBlocoLivre ListaBlocoLivre;
 
 struct Disco
 {
-    // identificador se o disco está¡ como bad ou não
-    int bad;
+    int bad; //identificador para saber se o bloco esta em BAD ou nao
 
     INode inode;
     INodeIndireto inodeIndireto;
@@ -145,7 +140,6 @@ struct Disco
     ListaBlocoLivre lbl;
     LinkSimbolico ls;
 };
-typedef struct Disco Disco;
 
 struct exibicaoEndereco
 {
@@ -153,7 +147,7 @@ struct exibicaoEndereco
     char info;
 };
 
-// prototipos
+//declaracao dos principais metodos
 int criarINode(Disco disco[], char tipoArquivo, char permissao[10], int tamanhoArquivo, int enderecoInodePai, string caminhoLink);
 int addDiretorioEArquivo(Disco disco[], char tipoArquivo, int enderecoInodeDiretorioAtual, char nomeDiretorioArquivoNovo[MAX_NOME_ARQUIVO], int tamanhoArquivo, string caminhoLink, int enderecoInodeCriado);
 void addArquivoNoDiretorio(Disco disco[], int enderecoDiretorio, int enderecoInodeCriado, char nomeDiretorioArquivo[MAX_NOME_ARQUIVO]);
@@ -167,49 +161,53 @@ void buscaBlocosArquivo(Disco disco[], int enderecoInodeArquivo, string &enderec
 void listaDiretorioAtualIgualExplorer(Disco disco[], int enderecoInodeAtual, bool primeiraVez);
 void listaLinkDiretorioAtual(Disco disco[], int enderecoInodeAtual, bool primeiraVez);
 
+//pegando o nome do proprietario (usuario)
 string getNomeProprietario(int proprietarioCod)
 {
     string nome;
 
-    switch (proprietarioCod)
+    switch(proprietarioCod)
     {
-    case 1000:
-        nome.assign("root");
-        break;
-
-    default:
-        nome.assign("nao definido");
+	    case 1000:
+	        nome.assign("root");
+	        break;
+	
+	    default:
+	        nome.assign("nao definido");
     }
 
     return nome;
 }
 
+//pegando nome do grupo desse proprietario
 string getNomeGrupo(int proprietarioCod)
 {
     string nome;
 
     switch (proprietarioCod)
     {
-    case 1000:
-        nome.assign("root");
-        break;
-    default:
-        nome.assign("nao definido");
+	    case 1000:
+	        nome.assign("root");
+	        break;
+	    default:
+	        nome.assign("nao definido");
     }
 
     return nome;
 }
 
+//inicializando disco
 void initDisco(Disco &disco)
 {
-    disco.bad = 0;
-    disco.diretorio.TL = 0;
-    disco.inode.protecao[0] = '\0';
+    disco.bad = 0; //bad = 0 -> indica que nao tem blocos defeituosos
+    disco.diretorio.TL = 0; //diretorio vazio
+    disco.inode.protecao[0] = '\0'; //inode sem tipo definido
     disco.inodeIndireto.TL = 0;
     disco.lbl.topo = -1;
     disco.ls.caminho[0] = '\0';
 }
 
+//inicializacao parcial do disco (sem mexer nos bloco defeituosos)
 void initDiscoR(Disco &disco)
 {
     disco.diretorio.TL = 0;
@@ -219,6 +217,7 @@ void initDiscoR(Disco &disco)
     disco.ls.caminho[0] = '\0';
 }
 
+//pegando a data e hora atual do sistema (retorna ja formatada: dd/mm/aaaa hh:mm:ss)
 void setDataHoraAtualSistema(char dataAtual[])
 {
     time_t t;
@@ -228,50 +227,66 @@ void setDataHoraAtualSistema(char dataAtual[])
     strcpy(dataAtual, data);
 }
 
+//define valor invalido como -1
 int getEnderecoNull()
 {
     return -1;
 }
 
+//atribui o valor invalido a uma variavel
 void setEnderecoNull(int &endereco)
 {
     endereco = getEnderecoNull();
 }
+
+//verifica se o endereco passado e invalido
 char isEnderecoNull(int endereco)
 {
     return endereco == getEnderecoNull();
 }
+
+//verifica se o endereco é valido
 char isEnderecoValido(int endereco)
 {
     return !isEnderecoNull(endereco);
 }
+
+//inicializando pilha de blocos livres
 void initListaBlocosLivre(ListaBlocoLivre &lbl)
 {
     setEnderecoNull(lbl.topo);
     setEnderecoNull(lbl.enderecoBlocoProx);
 }
+
+//verifica se a pilha de blocos livre esta cheia
 char isFullListaBlocosLivre(ListaBlocoLivre lbl)
 {
     return lbl.topo == QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE - 1;
 }
+
+//verifica se a lista de blocos
 char isEmptyListaBlocoLivre(ListaBlocoLivre lbl)
 {
     return lbl.topo == getEnderecoNull();
 }
+
+//verifica se o endereco esta marcado como um bloco defeituoso
 char isEnderecoBad(Disco disco[], int endereco)
 {
     return disco[endereco].bad;
 }
+
+//contador da quantidade de blocos livres existente na pilha
 int getQuantidadeBlocosLivres(Disco disco[])
 {
     int enderecoProxBloco = ENDERECO_CABECA_LISTA;
     int quantidadeBlocosLivres = 0;
 
-    while (enderecoProxBloco != -1 && disco[enderecoProxBloco].lbl.topo > -1)
+    while(enderecoProxBloco != -1 && disco[enderecoProxBloco].lbl.topo > -1)
     {
-        for (int j = 0; j <= disco[enderecoProxBloco].lbl.topo; j++)
+        for(int j = 0; j <= disco[enderecoProxBloco].lbl.topo; j++)
         {
-            if (!disco[disco[enderecoProxBloco].lbl.endereco[j]].bad)
+            if(!disco[disco[enderecoProxBloco].lbl.endereco[j]].bad)
                 quantidadeBlocosLivres++;
         }
 
@@ -281,29 +296,33 @@ int getQuantidadeBlocosLivres(Disco disco[])
     return quantidadeBlocosLivres;
 }
 
+//adiciona novo bloco livre na lista
 void pushListaBlocoLivre(Disco disco[], int endereco)
 {
     int enderecoBlocoAtual = ENDERECO_CABECA_LISTA;
     int enderecoProxBloco = disco[ENDERECO_CABECA_LISTA].lbl.enderecoBlocoProx;
 
-    while (isEnderecoValido(enderecoProxBloco)) // significa que a lista contém mais de um bloco, então percorre até o Último da lista
+	//garante que a lista contem mais de um bloco, entao anda ate o final da lista
+    while(isEnderecoValido(enderecoProxBloco)) 
     {
         enderecoBlocoAtual = enderecoProxBloco;
         enderecoProxBloco = disco[enderecoProxBloco].lbl.enderecoBlocoProx;
     }
 
-    // o Último bloco encontrado da lista não está cheio?
-    if (!isFullListaBlocosLivre(disco[enderecoBlocoAtual].lbl))
+    //se o ultimo bloco encontrado da lista nao esta cheio, adiciona o endereco no final
+    if(!isFullListaBlocosLivre(disco[enderecoBlocoAtual].lbl))
         disco[enderecoBlocoAtual].lbl.endereco[++disco[enderecoBlocoAtual].lbl.topo] = endereco;
     else
     {
-        // caso estiver cheio, adiciona mais um na lista
+        //caso estiver cheio, adiciona mais um bloco na lista
         disco[enderecoBlocoAtual].lbl.enderecoBlocoProx = enderecoBlocoAtual + 1;
 
-        // adiciona o endereço
+        //adiciona o endereco
         disco[enderecoBlocoAtual + 1].lbl.endereco[++disco[enderecoBlocoAtual + 1].lbl.topo] = endereco;
     }
 }
+
+// PAREI AQUI (GUILHERME)
 
 int popListaBlocoLivre(Disco disco[])
 {
