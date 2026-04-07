@@ -12,7 +12,7 @@ vector<string> split(string stringPrincipal, char delimitador=' ')
 
     vector<string> retorno;
 
-    while (getline(stringStream, stringAuxiliar, delimitador))
+    while(getline(stringStream, stringAuxiliar, delimitador))
     {
         retorno.push_back(stringAuxiliar);
     }
@@ -33,7 +33,8 @@ vector<string> splitPath(string stringPrincipal)
                 caminhoOrigem.push_back(elem);
         }
     }
-    else {
+    else 
+	{
         caminhoOrigem = split(stringPrincipal, '/');
     }
 
@@ -50,15 +51,17 @@ int ocorrenciaString(string conteudo, char caracterBuscado)
     int qtd=0;
     for(int i=0; i<conteudo.size(); i++)
     {
-        if (caracterBuscado == conteudo.at(i))
+        if(caracterBuscado == conteudo.at(i))
             qtd++;
     }
 
     return qtd;
 }
 
-string stringToLower(string palavra){
-    for (auto& x : palavra) { 
+string stringToLower(string palavra)
+{
+    for(auto& x : palavra) 
+	{ 
         x = tolower(x); 
     }
     return palavra;
