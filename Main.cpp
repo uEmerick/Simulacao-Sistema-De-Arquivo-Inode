@@ -12,7 +12,8 @@
 
 using namespace std;
 
-void inicializaSistemaBlocos(Disco disco[], int quantidadeBlocosTotais){
+// Inicializa o sistema de blocos do disco.
+void inicializa_sistema_blocos(Disco disco[], int quantidadeBlocosTotais){
     int quantidadeBlocosNecessariosListaLivre = quantidadeBlocosTotais / QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE;
     
     for(int j=0; j<quantidadeBlocosNecessariosListaLivre; j++)
@@ -29,7 +30,8 @@ void inicializaSistemaBlocos(Disco disco[], int quantidadeBlocosTotais){
     }
 }
 
-void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInodeRaiz){
+// Executa o sistema de arquivos, interpretando comandos do usuário.
+void execucao_sistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInodeRaiz){
     string caminhoAbsoluto;
     int endereco;
     string comando;
@@ -45,18 +47,23 @@ void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInod
     printf("\n");
     do
     {		
+                // Se o comando for 'ls' (listar diretório).
         if (strcmp(comando.substr(0, 2).c_str(), "ls") == 0)
         {
+            // Se o comando for 'ls -li'.
             if (comando.size() >= 5 && strcmp(comando.substr(3).c_str(), "-li") == 0){
                 listaLinkDiretorioAtual(disco, enderecoInodeAtual);
             }
+            // Se o comando for 'ls -l' ou 'ls -la'.
             else if (comando.size() >= 5 && strcmp(comando.substr(3, 2).c_str(), "-l") == 0)
             {
                 listarDiretorioComAtributos(disco, enderecoInodeAtual, strcmp(comando.substr(3).c_str(), "-la") == 0);
             }
+            // Se o comando for 'ls -e'.
             else if (comando.size() >= 5 && strcmp(comando.substr(3).c_str(), "-e") == 0){
                 listaDiretorioAtualIgualExplorer(disco, enderecoInodeAtual);
             }
+            // Se o comando for 'ls' ou 'ls -a'.
             else
             {
                 listarDiretorio(disco, enderecoInodeAtual, comando.size() >= 5 && strcmp(comando.substr(3).c_str(), "-a") == 0);
@@ -64,18 +71,21 @@ void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInod
 
             printf("\n");
         }
+                // Se o comando for 'mkdir' (criar diretório).
         else if (strcmp(comando.substr(0, 5).c_str(), "mkdir") == 0)
         {
             char comandoEnvio[comando.size() + 1];
-            
+
             if (comando.size() >= 6)
             {
-                strcpy(comandoEnvio, comando.substr(6).c_str()); 
-                
+                strcpy(comandoEnvio, comando.substr(6).c_str());
+
+                // Se a criação do diretório for bem-sucedida.
                 if (isEnderecoValido(mkdir(disco, enderecoInodeAtual, enderecoInodeRaiz, comandoEnvio)))
                 {
                     printf("Diretorio criado\n");
                 }
+                // Se a criação do diretório falhar.
                 else
                 {
                     textcolor(RED);
@@ -84,6 +94,7 @@ void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInod
                 }
             }
         }
+                // Se o comando for 'cd' (mudar diretório).
         else if (strcmp(comando.substr(0, 2).c_str(), "cd") == 0)
         {
             if (comando.size() >= 3)
@@ -91,14 +102,17 @@ void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInod
                 enderecoInodeAtual = cd(disco, enderecoInodeAtual, comando.substr(3), enderecoInodeRaiz, caminhoAbsoluto);
             }
         }
+                // Se o comando for 'touch' (criar arquivo).
         else if (strcmp(comando.substr(0, 5).c_str(), "touch") == 0)
         {
             char touchString[comando.size()+1];
             strcpy(touchString, comando.substr(6).c_str());
 
             if (comando.size() > 6)
+                // Se a criação do arquivo for bem-sucedida.
                 if(touch(disco, enderecoInodeAtual, enderecoInodeRaiz, touchString))
                     printf("Arquivo criado\n");
+                // Se a criação do arquivo falhar.
                 else {
                     textcolor(RED);
                     printf("Nao foi possivel criar o arquivo\n");
@@ -106,6 +120,7 @@ void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInod
                 }
                     
         }
+                // Se o comando for 'df' (exibir informações do disco).
         else if(strcmp(comando.substr(0, 2).c_str(), "df") == 0)
         {
             int qtdBlocosLivres=0, qtdBlocosOcupados=0;
@@ -116,6 +131,7 @@ void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInod
             printf("Filesystem\tTamanho\tUsados\tDisponivel\tUso%\t\tMontado em\n");
             printf("/dev/sda1\t%d\t%d\t%d\t\t%.2f%%\t\t/\n", quantidadeBlocosTotais, qtdBlocosOcupados,qtdBlocosLivres, porcentagemBlocosUsados*100);
         }
+                // Se o comando for 'vi' (editar arquivo).
         else if (strcmp(comando.substr(0, 2).c_str(), "vi") == 0)
         {
             if (comando.size() >= 3)
@@ -126,13 +142,16 @@ void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInod
                 vi(disco, enderecoInodeAtual, comando.substr(3), enderecosUtilizados);
             }
         }
+                // Se o comando for 'rmdir' (remover diretório).
         else if (strcmp(comando.substr(0, 5).c_str(), "rmdir") == 0)
         {
             if (comando.size() >= 6)
             {
                 int contadorDiretorio = 0;
+                // Se a remoção do diretório for bem-sucedida.
                 if(rmdir(disco, enderecoInodeAtual, comando.substr(6), contadorDiretorio))
                     printf("Diretorio removido\n");
+                // Se a remoção do diretório falhar.
                 else {
                     textcolor(RED);
                     printf("Nao foi possivel remover o diretorio\n");
@@ -140,12 +159,15 @@ void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInod
                 }
             }
         }
+                // Se o comando for 'rm' (remover arquivo).
         else if (strcmp(comando.substr(0, 2).c_str(), "rm") == 0)
         {
             if (comando.size() >= 3)
             {
+                // Se a remoção do arquivo for bem-sucedida.
                 if(rm(disco, enderecoInodeAtual, comando.substr(3)))
                     printf("Arquivo removido\n");
+                // Se a remoção do arquivo falhar.
                 else {
                     textcolor(RED);
                     printf("Nao foi possivel remover o arquivo\n");
@@ -153,26 +175,33 @@ void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInod
                 }
             }
         }  
+                // Se o comando for 'link' (criar um link físico ou simbólico).
         else if (strcmp(comando.substr(0, 4).c_str(), "link") == 0)
         {
             if (comando.size() >= 6)
             {
+                // Se for um link simbólico.
                 if(strcmp(comando.substr(5, 2).c_str(), "-s") == 0)
                     linkSimbolico(disco, enderecoInodeAtual, comando.substr(8), enderecoInodeRaiz);
+                // Se for um link físico.
                 else if(strcmp(comando.substr(5, 2).c_str(), "-h") == 0)
                     linkFisico(disco, enderecoInodeAtual, comando.substr(8), enderecoInodeRaiz);
             }
         }   
+                // Se o comando for 'unlink' (remover um link físico ou simbólico).
         else if (strcmp(comando.substr(0, 6).c_str(), "unlink") == 0)
         {
             if (comando.size() >= 6)
             {
+                // Se for um link simbólico.
                 if(strcmp(comando.substr(7, 2).c_str(), "-s") == 0)
                     unlinkSimbolico(disco, enderecoInodeAtual, comando.substr(10), enderecoInodeRaiz);
+                // Se for um link físico.
                 else if(strcmp(comando.substr(7, 2).c_str(), "-h") == 0)
                     unlinkFisico(disco, enderecoInodeAtual, comando.substr(10), enderecoInodeRaiz);
             }
         }
+                // Se o comando for 'chmod' (alterar permissões).
         else if (strcmp(comando.substr(0, 5).c_str(), "chmod") == 0)
         {
             if (comando.size() >= 7)
@@ -180,25 +209,31 @@ void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInod
                 chmod(disco, enderecoInodeAtual, comando.substr(6));
             }
         } 
+                // Se o comando for 'disk' (exibir informações do disco).
         else if (strcmp(comando.c_str(), "disk") == 0)
         {
             printf("\n");
             exibirDisco(disco, quantidadeBlocosTotais, quantidadeBlocosTotais / QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE);
             printf("\n");
         }
+                // Se o comando for 'clear' (limpar a tela).
         else if (strcmp(comando.c_str(), "clear") == 0)
         {
             system("cls");
         }
+                // Se o comando começar com 'bad' (marcar bloco como defeituoso).
         else if (strcmp(comando.substr(0, 3).c_str(), "bad") == 0)
         {
             if (comando.size() >= 4)
             {
                 endereco = atoi(comando.substr(4).c_str());
+                // Se o endereço for válido.
                 if (endereco >= 0 && endereco < quantidadeBlocosTotais)
                 {
                     disco[endereco].bad = 1;
-                }else{
+                }
+                // Se o endereço for inválido.
+                else{
                     textcolor(RED);
                     printf("endereco invalido.\n");
                     textcolor(WHITE);
@@ -240,14 +275,16 @@ void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInod
     } while(strcmp(comando.c_str(), "exit") != 0);
 }
 
-void inicializaSistema(Disco disco[], int quantidadeBlocosTotais)
+// Inicializa o sistema, criando o diretório raiz e iniciando a execução.
+void inicializa_sistema(Disco disco[], int quantidadeBlocosTotais)
 {
     inicializaSistemaBlocos(disco, quantidadeBlocosTotais);
     int enderecoInodeRaiz = criaDiretorioRaiz(disco);
     execucaoSistema(disco, quantidadeBlocosTotais, enderecoInodeRaiz);
 }
 
-int QuantidadeBlocosTotais() {
+// Obtém a quantidade total de blocos do disco a partir da entrada do usuário.
+int obter_quantidade_blocos_totais() {
 
     string charQuantidadeBlocosTotais;
 	int quantidadeBlocosTotais;
@@ -275,10 +312,11 @@ int QuantidadeBlocosTotais() {
 	return quantidadeBlocosTotais;
 }
 
+// Função principal do programa.
 int main()
 {
     int quantidadeBlocosTotais;
-    //no inicio do sistema, deve ser informado pelo usu�rio a quantidade total de discos que vai existir
+    //no inicio do sistema, deve ser informado pelo usu�rio a quantidade total de discos que vai existir
     
     system("cls");
     

@@ -50,7 +50,7 @@ void textcolor (int color)
 }
 
 
-// INODE CONTROLA COMO EST¡Å SENDO GRAVADO O ARQUIVO, EM QUAIS BLOCOS EST¡Å GRAVADO O CONTE⁄DO DO ARQUIVO, AS PERMISS’ES, DATA
+// INODE CONTROLA COMO ESTÔøΩÔøΩ SENDO GRAVADO O ARQUIVO, EM QUAIS BLOCOS ESTÔøΩÔøΩ GRAVADO O CONTEÔøΩDO DO ARQUIVO, AS PERMISSÔøΩES, DATA
 struct INode
 {
     /*
@@ -87,7 +87,7 @@ struct INode
     /*
         ponteiros para blocos de dados:
 
-        - enderecoDireto: atÈ 5 blocos diretos
+        - enderecoDireto: atÔøΩ 5 blocos diretos
         - enderecoSimplesIndireto: aponta para um bloco que contem outros ponteiros
         - enderecoDuploIndireto: ponteiro para bloco de ponteiros de ponteiros
         - enderecoTriploIndireto: nivel mais profundo de indirecao
@@ -245,7 +245,7 @@ char isEnderecoNull(int endereco)
     return endereco == getEnderecoNull();
 }
 
-//verifica se o endereco È valido
+//verifica se o endereco ÔøΩ valido
 char isEnderecoValido(int endereco)
 {
     return !isEnderecoNull(endereco);
@@ -417,7 +417,7 @@ void inserirInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int e
     if(disco[enderecoInodeIndireto].inodeIndireto.TL < MAX_INODEINDIRETO - InseridoPeloTriplo)
     {
         int inicio = disco[enderecoInodeIndireto].inodeIndireto.TL;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < quantidadeBlocosNecessarios && inicio < MAX_INODEINDIRETO - InseridoPeloTriplo)
         {
             disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio] = popListaBlocoLivre(disco);
@@ -457,11 +457,11 @@ void inserirInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int e
 // utilizado para inserir ao criar o inode
 void inserirInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int enderecoInodePrincipal, int &quantidadeBlocosNecessarios, int InseridoPeloTriplo = 0)
 {
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL < MAX_INODEINDIRETO)
     {
         int inicio = disco[enderecoInodeIndireto].inodeIndireto.TL;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < quantidadeBlocosNecessarios && inicio < MAX_INODEINDIRETO)
         {
             if (isEnderecoNull(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
@@ -484,11 +484,11 @@ void inserirInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int end
 // utilizado para inserir ao criar o inode
 void inserirInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, int enderecoInodePrincipal, int &quantidadeBlocosNecessarios)
 {
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL < MAX_INODEINDIRETO)
     {
         int inicio = disco[enderecoInodeIndireto].inodeIndireto.TL;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < quantidadeBlocosNecessarios && inicio < MAX_INODEINDIRETO)
         {
             if (isEnderecoNull(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
@@ -511,10 +511,10 @@ void inserirInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, int en
 void preInsereInodeIndiretoSimples(Disco disco[], int &quantidadeBlocosNecessarios, int &quantidadeBlocosUsou, int InseridoPeloTriplo = 0)
 {
     int quantidadeBlocosUtilizados = 0;
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < quantidadeBlocosNecessarios && inicio < MAX_INODEINDIRETO - InseridoPeloTriplo)
     {
         quantidadeBlocosUtilizados++;
@@ -534,10 +534,10 @@ void preInsereInodeIndiretoSimples(Disco disco[], int &quantidadeBlocosNecessari
 // utilizado para inserir ao criar o inode
 void preInsereInodeIndiretoDuplo(Disco disco[], int &quantidadeBlocosNecessarios, int &quantidadeBlocosUsou, int InseridoPeloTriplo = 0)
 {
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < quantidadeBlocosNecessarios && inicio < MAX_INODEINDIRETO)
     {
         quantidadeBlocosUsou++;
@@ -553,7 +553,7 @@ void preInsereInodeIndiretoTriplo(Disco disco[], int &quantidadeBlocosNecessario
 {
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < quantidadeBlocosNecessarios && inicio < MAX_INODEINDIRETO)
     {
         quantidadeBlocosUsou++;
@@ -568,10 +568,10 @@ void preInsereInodeIndiretoTriplo(Disco disco[], int &quantidadeBlocosNecessario
 void buscaMaiorArqInodeIndiretoSimples(Disco disco[], int quantidadeBlocosDisponivel, int &quantidadeBlocosUsou, int &quantidadeRealUtilizada, int InseridoPeloTriplo = 0)
 {
     int quantidadeBlocosUtilizados = 0;
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < quantidadeBlocosDisponivel && quantidadeBlocosUsou <  quantidadeBlocosDisponivel && inicio < MAX_INODEINDIRETO - InseridoPeloTriplo)
     {
         quantidadeBlocosUtilizados++;
@@ -592,10 +592,10 @@ void buscaMaiorArqInodeIndiretoSimples(Disco disco[], int quantidadeBlocosDispon
 // utilizado para inserir ao criar o inode
 void buscaMaiorArqInodeIndiretoDuplo(Disco disco[], int quantidadeBlocosDisponivel, int &quantidadeBlocosUsou, int &quantidadeRealUtilizada, int InseridoPeloTriplo = 0)
 {
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < quantidadeBlocosDisponivel && quantidadeBlocosUsou <  quantidadeBlocosDisponivel &&inicio < MAX_INODEINDIRETO)
     {
         quantidadeBlocosUsou++;
@@ -611,7 +611,7 @@ void buscaMaiorArqInodeIndiretoTriplo(Disco disco[], int quantidadeBlocosDisponi
 {
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < quantidadeBlocosDisponivel &&quantidadeBlocosUsou <  quantidadeBlocosDisponivel && inicio < MAX_INODEINDIRETO)
     {
         quantidadeBlocosUsou++;
@@ -706,7 +706,7 @@ int getQuantidadeBlocosPerdidos(int quantidadeBlocosTotal){
 void percorrerInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, exibicaoEndereco enderecos[], int &TL, int ChamadoPeloTriplo = 0)
 {
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
     {
         if (!isEnderecoBad(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
@@ -725,7 +725,7 @@ void percorrerInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, exi
 void percorrerInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, exibicaoEndereco enderecos[], int &TL, int ChamadoPeloTriplo = 0)
 {
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
     {
         if (!isEnderecoBad(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
@@ -742,7 +742,7 @@ void percorrerInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, exibi
 void percorrerInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, exibicaoEndereco enderecos[], int &TL)
 {
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
     {
         if (!isEnderecoBad(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio])){
@@ -757,11 +757,11 @@ void percorrerInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, exib
 void buscarLivresOcupadosInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int &qtdBlocosOcupados, int ChamadoPeloTriplo = 0)
 {
 
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
         {
             qtdBlocosOcupados++;
@@ -774,11 +774,11 @@ void buscarLivresOcupadosInodeIndiretoSimples(Disco disco[], int enderecoInodeIn
 void buscarLivresOcupadosInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int &qtdBlocosOcupados, int ChamadoPeloTriplo = 0)
 {
 
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
         {
             qtdBlocosOcupados++;
@@ -792,11 +792,11 @@ void buscarLivresOcupadosInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndi
 void buscarLivresOcupadosInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, int &qtdBlocosOcupados)
 {
 
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„oo esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩoo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
         {
             qtdBlocosOcupados++;
@@ -806,16 +806,16 @@ void buscarLivresOcupadosInodeIndiretoTriplo(Disco disco[], int enderecoInodeInd
     }
 }
 
-// utilizado para exibir os diretÛrios do disco
+// utilizado para exibir os diretÔøΩrios do disco
 void listarDiretorioInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int &linha, char tipoListagem, bool exibeDiretorioOculto, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeArquivo;
     int i;
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
         {
 
@@ -853,15 +853,15 @@ void listarDiretorioInodeIndiretoSimples(Disco disco[], int enderecoInodeIndiret
     }
 }
 
-// utilizado para exibir os diretÛrios do disco
+// utilizado para exibir os diretÔøΩrios do disco
 void listarDiretorioInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int &linha, char tipoListagem, bool exibeDiretorioOculto, int ChamadoPeloTriplo = 0)
 {
 
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
         {
             listarDiretorioInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], linha, tipoListagem, exibeDiretorioOculto, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
@@ -870,15 +870,15 @@ void listarDiretorioInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto,
     }
 }
 
-// utilizado para exibir os diretÛrios do disco
+// utilizado para exibir os diretÔøΩrios do disco
 void listarDiretorioInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, int &linha, char tipoListagem, bool exibeDiretorioOculto, int ChamadoPeloTriplo = 0)
 {
 
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
         {
             listarDiretorioInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], linha, tipoListagem, exibeDiretorioOculto, 1);
@@ -887,7 +887,7 @@ void listarDiretorioInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto
     }
 }
 
-// utilizado para exibir os diretÛrios do disco
+// utilizado para exibir os diretÔøΩrios do disco
 int verificaExistenciaArquivoOuDiretorioInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, char tipoArquivo, string nomeArquivo, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeArquivo;
@@ -896,7 +896,7 @@ int verificaExistenciaArquivoOuDiretorioInodeIndiretoSimples(Disco disco[], int 
 
     if (tipoArquivo == ' ')
     {
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
         {
             for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.TL; i++)
@@ -912,7 +912,7 @@ int verificaExistenciaArquivoOuDiretorioInodeIndiretoSimples(Disco disco[], int 
     }
     else
     {
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
         {
             for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.TL; i++)
@@ -933,16 +933,16 @@ int verificaExistenciaArquivoOuDiretorioInodeIndiretoSimples(Disco disco[], int 
     return getEnderecoNull();
 }
 
-// utilizado para exibir os diretÛrios do disco
+// utilizado para exibir os diretÔøΩrios do disco
 int verificaExistenciaArquivoOuDiretorioInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, char tipoArquivo, string nomeArquivo, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeDir;
 
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
         {
             enderecoInodeDir = verificaExistenciaArquivoOuDiretorioInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], tipoArquivo, nomeArquivo, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
@@ -956,16 +956,16 @@ int verificaExistenciaArquivoOuDiretorioInodeIndiretoDuplo(Disco disco[], int en
     return getEnderecoNull();
 }
 
-// utilizado para exibir os diretÛrios do disco
+// utilizado para exibir os diretÔøΩrios do disco
 int verificaExistenciaArquivoOuDiretorioInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, char tipoArquivo, string nomeArquivo, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeDir;
 
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
         {
             enderecoInodeDir = verificaExistenciaArquivoOuDiretorioInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], tipoArquivo, nomeArquivo, 1);
@@ -987,7 +987,7 @@ int buscaEnderecoEntradaDiretorioArquivoInodeIndiretoSimples(Disco disco[], int 
 
     if (tipoArquivo == ' ')
     {
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
         {
             for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.TL; i++)
@@ -1002,7 +1002,7 @@ int buscaEnderecoEntradaDiretorioArquivoInodeIndiretoSimples(Disco disco[], int 
     }
     else
     {
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
         {
             for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.TL; i++)
@@ -1019,20 +1019,20 @@ int buscaEnderecoEntradaDiretorioArquivoInodeIndiretoSimples(Disco disco[], int 
         }
     }
 
-    //TODO - CHAMAR INODE AUXILIAR SE N√O ENCONTRAR
+    //TODO - CHAMAR INODE AUXILIAR SE NÔøΩO ENCONTRAR
     return getEnderecoNull();
 }
 
-// utilizado para exibir os diretÛrios do disco
+// utilizado para exibir os diretÔøΩrios do disco
 int buscaEnderecoEntradaDiretorioArquivoInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, char tipoArquivo, string nomeArquivo, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeDir;
 
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
         {
             enderecoInodeDir = buscaEnderecoEntradaDiretorioArquivoInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], tipoArquivo, nomeArquivo, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
@@ -1045,16 +1045,16 @@ int buscaEnderecoEntradaDiretorioArquivoInodeIndiretoDuplo(Disco disco[], int en
 
     return getEnderecoNull();
 }
-// utilizado para exibir os diretÛrios do disco
+// utilizado para exibir os diretÔøΩrios do disco
 int buscaEnderecoEntradaDiretorioArquivoInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, char tipoArquivo, string nomeArquivo, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeDir;
 
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
         {
             enderecoInodeDir = buscaEnderecoEntradaDiretorioArquivoInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], tipoArquivo, nomeArquivo, 1);
@@ -1068,7 +1068,7 @@ int buscaEnderecoEntradaDiretorioArquivoInodeIndiretoTriplo(Disco disco[], int e
     return getEnderecoNull();
 }
 
-// utilizado para reservar novo bloco do diretÛrio apÛs criaÁ„o do inode
+// utilizado para reservar novo bloco do diretÔøΩrio apÔøΩs criaÔøΩÔøΩo do inode
 int buscaNovoBlocoDiretorioLivreEmIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int enderecoInodeDiretorioAtual, int InseridoPeloTriplo = 0)
 {
     bool consegueInserir = false;
@@ -1086,7 +1086,7 @@ int buscaNovoBlocoDiretorioLivreEmIndiretoSimples(Disco disco[], int enderecoIno
         }
     }
 
-    // signfica que n„o conseguiu inserir e n„o percorreu todas as funÁıes, senso assim, a prÛxima posiÁ„o È -1, ent„o deve ser criado um novo diretÛrio
+    // signfica que nÔøΩo conseguiu inserir e nÔøΩo percorreu todas as funÔøΩÔøΩes, senso assim, a prÔøΩxima posiÔøΩÔøΩo ÔøΩ -1, entÔøΩo deve ser criado um novo diretÔøΩrio
     if (!consegueInserir && i <= MAX_INODEINDIRETO && isEnderecoNull(endereco))
     {
         endereco = popListaBlocoLivre(disco);
@@ -1094,22 +1094,22 @@ int buscaNovoBlocoDiretorioLivreEmIndiretoSimples(Disco disco[], int enderecoIno
         disco[enderecoInodeIndireto].inodeIndireto.TL++;
         disco[disco[disco[enderecoInodeDiretorioAtual].inode.enderecoDireto[0]].diretorio.arquivo[0].enderecoINode].inode.tamanhoArquivo++;
     }
-    else if (!consegueInserir) // chegou ao ⁄ltimo endereÁo e mesmo assim n„o conseguiu inserir
+    else if (!consegueInserir) // chegou ao ÔøΩltimo endereÔøΩo e mesmo assim nÔøΩo conseguiu inserir
     {
         return getEnderecoNull();
     }
 
-    // TODO - VERIFICAR SE est· SENDO PERCORRIDO PELO TRIPLO, E SE O ⁄ltimo endereÁo INDIRETO … OQ SOBROU, SENDO ASSIM, DEVE SE CRIAR UM INODE EXTRA
+    // TODO - VERIFICAR SE estÔøΩ SENDO PERCORRIDO PELO TRIPLO, E SE O ÔøΩltimo endereÔøΩo INDIRETO ÔøΩ OQ SOBROU, SENDO ASSIM, DEVE SE CRIAR UM INODE EXTRA
     return endereco;
 }
 
-// utilizado para reservar novo bloco do diretÛrio apÛs criaÁ„o do inode
+// utilizado para reservar novo bloco do diretÔøΩrio apÔøΩs criaÔøΩÔøΩo do inode
 int buscaNovoBlocoDiretorioLivreEmIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int enderecoInodeDiretorioAtual, int InseridoPeloTriplo = 0)
 {
     bool conseguiuInserir = false;
     int endereco = getEnderecoNull();
 
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     int inicio = 0;
     while (inicio < MAX_INODEINDIRETO && !conseguiuInserir)
     {
@@ -1147,13 +1147,13 @@ int buscaNovoBlocoDiretorioLivreEmIndiretoDuplo(Disco disco[], int enderecoInode
     return getEnderecoNull();
 }
 
-// utilizado para reservar novo bloco apÛs criaÁ„o do inode
+// utilizado para reservar novo bloco apÔøΩs criaÔøΩÔøΩo do inode
 int buscaNovoBlocoDiretorioLivreEmIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, int enderecoInodeDiretorioAtual)
 {
     bool conseguiuInserir = false;
     int endereco = getEnderecoNull();
 
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     int inicio = 0;
     while (inicio < MAX_INODEINDIRETO && !conseguiuInserir)
     {
@@ -1194,7 +1194,7 @@ void retornaEnderecosInodeIndiretoSimples(Disco disco[], int enderecoInodeIndire
 {
     char enderecoToChar[300];
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
     {
         itoa(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecoToChar, 10);
@@ -1220,7 +1220,7 @@ void retornaEnderecosInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto
 {
     char enderecoToChar[300];
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
     {
         itoa(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecoToChar, 10);
@@ -1236,7 +1236,7 @@ void retornaEnderecosInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndiret
 {
     char enderecoToChar[300];
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
     {
         itoa(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecoToChar, 10);
@@ -1251,7 +1251,7 @@ void retornaEnderecosInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndiret
 void removeEnderecosInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int ChamadoPeloTriplo = 0)
 {
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
     {
         initDisco(disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]]);
@@ -1280,7 +1280,7 @@ void removeEnderecosInodeIndiretoSimples(Disco disco[], int enderecoInodeIndiret
 void removeEnderecosInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int ChamadoPeloTriplo = 0)
 {
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
     {
         removeEnderecosInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
@@ -1297,7 +1297,7 @@ void removeEnderecosInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto
 {
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
     {
         removeEnderecosInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], 1);
@@ -1310,14 +1310,14 @@ void removeEnderecosInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto
     }
 }
 
-// utilizado para exibir os diretÛrios do disco
+// utilizado para exibir os diretÔøΩrios do disco
 void retornaQuantidadeDiretorioInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int &contadorDiretorio, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeArquivo;
     int i;
     int inicio = 0;
 
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
     {
         contadorDiretorio += disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.TL;
@@ -1336,16 +1336,16 @@ void retornaQuantidadeDiretorioInodeIndiretoSimples(Disco disco[], int enderecoI
     }
 }
 
-// utilizado para exibir os diretÛrios do disco
+// utilizado para exibir os diretÔøΩrios do disco
 void retornaQuantidadeDiretorioInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int &contadorDiretorio, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeDir;
 
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
         {
             retornaQuantidadeDiretorioInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], contadorDiretorio, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
@@ -1354,15 +1354,15 @@ void retornaQuantidadeDiretorioInodeIndiretoDuplo(Disco disco[], int enderecoIno
     }
 }
 
-// utilizado para exibir os diretÛrios do disco
+// utilizado para exibir os diretÔøΩrios do disco
 void retornaQuantidadeDiretorioInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, int &contadorDiretorio, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeDir;
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
         {
             retornaQuantidadeDiretorioInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], contadorDiretorio, 1);
@@ -1537,7 +1537,7 @@ int criarINode(Disco disco[], char tipoArquivo, char permissao[10], int tamanhoA
 {
     int quantidadeBlocosNecessarios = (int)ceil((double)tamanhoArquivo / (double)10);
 
-    // quantidade de blocos necess·rias È maior que a quantidade de blocos livres. Se for, n„o posso gerar o arquivo, ent„o retorna "-1"
+    // quantidade de blocos necessÔøΩrias ÔøΩ maior que a quantidade de blocos livres. Se for, nÔøΩo posso gerar o arquivo, entÔøΩo retorna "-1"
     if (quantidadeBlocosNecessarios > getQuantidadeBlocosLivres(disco))
     {
         return getEnderecoNull();
@@ -1565,7 +1565,7 @@ int criarINode(Disco disco[], char tipoArquivo, char permissao[10], int tamanhoA
         setDataHoraAtualSistema(disco[enderecoInode].inode.dataUltimaAlteracao);
         setDataHoraAtualSistema(disco[enderecoInode].inode.dataUltimoAcesso);
 
-        // usu·rio root
+        // usuÔøΩrio root
         disco[enderecoInode].inode.proprietario = 1000;
         // grupo root
         disco[enderecoInode].inode.grupo = 1000;
@@ -1613,17 +1613,17 @@ int criarINode(Disco disco[], char tipoArquivo, char permissao[10], int tamanhoA
 
         if (tipoArquivo == TIPO_ARQUIVO_DIRETORIO)
         {
-            // caso o tipo de arquivo criado for diretÛrio, È necess·rio criar dois diretÛrios dentro dele, sendo:
-            //  "."(Aponta para o inode do diretÛrio atual) e
-            //  ".."(Aponta para o inode do diretÛrio anterior)
+            // caso o tipo de arquivo criado for diretÔøΩrio, ÔøΩ necessÔøΩrio criar dois diretÔøΩrios dentro dele, sendo:
+            //  "."(Aponta para o inode do diretÔøΩrio atual) e
+            //  ".."(Aponta para o inode do diretÔøΩrio anterior)
 
             // strcpy(nomeDiretorioAtual, ".");
             // strcpy(nomeDiretorioAnterior, "..");
 
-            // //criaÁ„o do diretÛrio "." - atual
+            // //criaÔøΩÔøΩo do diretÔøΩrio "." - atual
             // addArquivoNoDiretorio(disco, enderecoInode, enderecoInode, nomeDiretorioAtual);
 
-            // //cria√ß√£o do diretÛrio ".." - pai
+            // //cria√ß√£o do diretÔøΩrio ".." - pai
             // addDiretorio(disco, enderecoInodeDiretorioAtual, enderecoInode, nomeDiretorioAnterior);
             if (isEnderecoNull(enderecoInodePai))
                 enderecoInodePai = enderecoInode;
@@ -1642,7 +1642,7 @@ int criarINode(Disco disco[], char tipoArquivo, char permissao[10], int tamanhoA
         }
     }
 
-    // retorna endereÁo do inode criado
+    // retorna endereÔøΩo do inode criado
     return enderecoInode;
 }
 
@@ -1651,7 +1651,7 @@ char isDirFull(Diretorio diretorio)
     return diretorio.TL == DIRETORIO_LIMITE_ARQUIVOS;
 }
 
-// adiciona o arquivo dentro da entrada do diretÛrio
+// adiciona o arquivo dentro da entrada do diretÔøΩrio
 void addArquivoNoDiretorio(Disco disco[], int enderecoDiretorio, int enderecoInodeCriado, char nomeDiretorioArquivo[MAX_NOME_ARQUIVO])
 {
 
@@ -1683,7 +1683,7 @@ int buscaArquivoNoDiretorio(Disco disco[], int enderecoEntradaDiretorio, string 
     return pos;
 }
 
-// funÁ„o que busca qual o diretÛrio que ser· possÌvel inserir o arquivo ou diretÛrio
+// funÔøΩÔøΩo que busca qual o diretÔøΩrio que serÔøΩ possÔøΩvel inserir o arquivo ou diretÔøΩrio
 int addDiretorioEArquivo(Disco disco[], char tipoArquivo, int enderecoInodeDiretorioAtual, char nomeDiretorioArquivoNovo[MAX_NOME_ARQUIVO], int tamanhoArquivo = 1, string caminhoLink="", int enderecoInodeCriado=getEnderecoNull())
 {
 
@@ -1708,14 +1708,14 @@ int addDiretorioEArquivo(Disco disco[], char tipoArquivo, int enderecoInodeDiret
             }
         }
 
-        // pergunta se n„o conseguiu inserir no diretÛrio e finalizou o while antes mesmo de atingir todos os EndereÁos.
-        if (!consegueInserir && i <= 5 && isEnderecoNull(enderecoDireto)) // significa que h· blocos livres para ser preenchidos e o diretÛrio esta cheio.
+        // pergunta se nÔøΩo conseguiu inserir no diretÔøΩrio e finalizou o while antes mesmo de atingir todos os EndereÔøΩos.
+        if (!consegueInserir && i <= 5 && isEnderecoNull(enderecoDireto)) // significa que hÔøΩ blocos livres para ser preenchidos e o diretÔøΩrio esta cheio.
         {
             enderecoInodeDiretorio = popListaBlocoLivre(disco);
             disco[enderecoInodeDiretorioAtual].inode.enderecoDireto[i - 1] = enderecoInodeDiretorio;
             disco[disco[disco[enderecoInodeDiretorioAtual].inode.enderecoDireto[0]].diretorio.arquivo[0].enderecoINode].inode.tamanhoArquivo++;
         }
-        else if (!consegueInserir) // todos os blocos est„o cheio, consequentemente deve verificar se pode adicionar nos blocos indiretos
+        else if (!consegueInserir) // todos os blocos estÔøΩo cheio, consequentemente deve verificar se pode adicionar nos blocos indiretos
         {
             if (isEnderecoNull(disco[enderecoInodeDiretorioAtual].inode.enderecoSimplesIndireto))
             {
@@ -1723,7 +1723,7 @@ int addDiretorioEArquivo(Disco disco[], char tipoArquivo, int enderecoInodeDiret
             }
             enderecoInodeDiretorio = buscaNovoBlocoDiretorioLivreEmIndiretoSimples(disco, disco[enderecoInodeDiretorioAtual].inode.enderecoSimplesIndireto, enderecoInodeDiretorioAtual);
 
-            // n„o conseguiu buscar um bloco disponÌvel no inode indireto simples
+            // nÔøΩo conseguiu buscar um bloco disponÔøΩvel no inode indireto simples
             if (isEnderecoNull(enderecoInodeDiretorio))
             {
                 if (isEnderecoNull(disco[enderecoInodeDiretorioAtual].inode.enderecoDuploIndireto))
@@ -1732,7 +1732,7 @@ int addDiretorioEArquivo(Disco disco[], char tipoArquivo, int enderecoInodeDiret
                 }
                 enderecoInodeDiretorio = buscaNovoBlocoDiretorioLivreEmIndiretoDuplo(disco, disco[enderecoInodeDiretorioAtual].inode.enderecoDuploIndireto, enderecoInodeDiretorioAtual);
 
-                // n„o conseguiu buscar um bloco disponÌvel no inode indireto duplo
+                // nÔøΩo conseguiu buscar um bloco disponÔøΩvel no inode indireto duplo
                 if (isEnderecoNull(enderecoInodeDiretorio))
                 {
                     if (isEnderecoNull(disco[enderecoInodeDiretorioAtual].inode.enderecoTriploIndireto))
@@ -1744,11 +1744,11 @@ int addDiretorioEArquivo(Disco disco[], char tipoArquivo, int enderecoInodeDiret
                 }
             }
         }
-        else // identificou um bloco que pode ser utilizado para inserir o diretÛrio
+        else // identificou um bloco que pode ser utilizado para inserir o diretÔøΩrio
         {
             enderecoInodeDiretorio = enderecoDireto;
         }
-        // TODO - DESCOBRIR QUAL O BLOCO LIVRE PARA INSERIR O diretÛrio NO diretÛrio ATUAL
+        // TODO - DESCOBRIR QUAL O BLOCO LIVRE PARA INSERIR O diretÔøΩrio NO diretÔøΩrio ATUAL
 
         if (!enderecoInodeDiretorio)
             return getEnderecoNull();
@@ -1767,7 +1767,7 @@ int addDiretorioEArquivo(Disco disco[], char tipoArquivo, int enderecoInodeDiret
                 convertPermissaoUGOToString(PERMISSAO_PADRAO_LINKSIMBOLICO, permissao, 0);
             }
 
-            // adiciona o arquivo dentro da entrada do diretÛrio
+            // adiciona o arquivo dentro da entrada do diretÔøΩrio
             if (isEnderecoNull(enderecoInodeCriado))
                 enderecoInodeCriado = criarINode(disco, tipoArquivo, permissao, tamanhoArquivo, enderecoInodeDiretorioAtual, caminhoLink);
 
@@ -1894,7 +1894,7 @@ void exibirDisco(Disco disco[], int tamanhoDisco, int quantidadeBlocosNecessario
         }
         // else if(disco[i].inodeIndireto.TL > 0)
         // {
-        //     //ignora o indireto, ser· realizado no inode
+        //     //ignora o indireto, serÔøΩ realizado no inode
         // }
         // else if (strlen(disco[i].ls.caminho.c_str()) > 0)
         // {
@@ -2041,10 +2041,10 @@ int cd(Disco disco[], int enderecoInodeAtual, string nomeDiretorio, int endereco
         }
         else
         {
-            // encontra a ultima ocorrÍncia de uma string
+            // encontra a ultima ocorrÔøΩncia de uma string
             size_t pos = caminhoAbsoluto.rfind("/");
 
-            // verifica se a posiÁ„o encontrada È valida
+            // verifica se a posiÔøΩÔøΩo encontrada ÔøΩ valida
             // se achou uma posicao da string fornecida
             if (pos != std::string::npos)
             {
@@ -2126,7 +2126,7 @@ bool touch(Disco disco[], int enderecoInodeAtual, int enderecoInodeRaiz, char co
         vetorStringSeparado = splitPath(nomeArquivo);
 
         endereco = existeArquivoOuDiretorio(disco, enderecoInodeOrigem, lastPosition(vetorStringSeparado).c_str());
-        if (isEnderecoNull(endereco)) // ainda n„o tem nenhum arquivo criado com esse nome
+        if (isEnderecoNull(endereco)) // ainda nÔøΩo tem nenhum arquivo criado com esse nome
         {
             int quantidadeBlocosLivres = getQuantidadeBlocosLivres(disco);
             int quantidadeBlocosUsados = getQuantidadeBlocosUsar(disco, ceil((float)tamanhoArquivo / (float)10));            
@@ -2217,7 +2217,7 @@ void vi(Disco disco[], int enderecoInodeAtual, string nomeArquivo, string &ender
     // primeira vez que entra
     if (primeiraVez)
         enderecoInodeArquivo = existeArquivoOuDiretorio(disco, enderecoInodeAtual, nomeArquivo, TIPO_ARQUIVO_ARQUIVO);
-    else // demais extensıes de inode
+    else // demais extensÔøΩes de inode
         enderecoInodeArquivo = enderecoInodeAtual;
 
     if (isEnderecoValido(enderecoInodeArquivo))
@@ -2275,7 +2275,7 @@ void vi(Disco disco[], int enderecoInodeAtual, string nomeArquivo, string &ender
             // separa em partes usando '-'
 		    vector<string> partes = split(enderecosUtilizados, '-');
 		
-		    // converte pra n˙meros
+		    // converte pra nÔøΩmeros
 		    vector<int> enderecos;
 		    for (const string &p : partes) {
 		        stringstream ss(p);
@@ -2314,7 +2314,7 @@ bool rm(Disco disco[], int enderecoInodeAtual, string nomeArquivo, int primeiraV
 
     if (primeiraVez)
         enderecoInodeArquivo = existeArquivoOuDiretorio(disco, enderecoInodeAtual, nomeArquivo, TIPO_ARQUIVO_ARQUIVO);
-    else // demais extensıes de inode
+    else // demais extensÔøΩes de inode
         enderecoInodeArquivo = enderecoInodeAtual;
 
     if (isEnderecoValido(enderecoInodeArquivo))
@@ -2361,7 +2361,7 @@ bool rm(Disco disco[], int enderecoInodeAtual, string nomeArquivo, int primeiraV
 
         if (primeiraVez)
         {
-            // remover da entrada do diretÛrio o nome do arquivo.
+            // remover da entrada do diretÔøΩrio o nome do arquivo.
             int enderecoEntradaDiretorio = buscaEnderecoEntradaDiretorioArquivo(disco, enderecoInodeAtual, nomeArquivo, TIPO_ARQUIVO_ARQUIVO);
             int pos = 0;
 
@@ -2680,12 +2680,12 @@ void unlinkSimbolico(Disco disco[], int enderecoInodeAtual, string nomeArquivo, 
         {
             disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].enderecoINode].inode.enderecoDireto[0];
 
-            //inicializa aquela posiÁ„o do disco para remover o apontamento
+            //inicializa aquela posiÔøΩÔøΩo do disco para remover o apontamento
             initDisco(disco[disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].enderecoINode].inode.enderecoDireto[0]]);
             //joga de volta pra lista de blocos livres
             pushListaBlocoLivre(disco, disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].enderecoINode].inode.enderecoDireto[0]);
 
-            //inicializa a posiÁ„o do disco que armazena o inode
+            //inicializa a posiÔøΩÔøΩo do disco que armazena o inode
             initDisco(disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].enderecoINode]);
             //joga de volta pra lista de blocos livres
             pushListaBlocoLivre(disco, disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].enderecoINode].inode.enderecoDireto[0]);
@@ -2781,7 +2781,7 @@ void chmod(Disco disco[], int enderecoInodeAtual, string comando)
         {
             strcpy(permissao, disco[enderecoInode].inode.protecao);
 
-            if (permissaoSolicitada.at(1) == '+') //est· adicionando permiss„o
+            if (permissaoSolicitada.at(1) == '+') //estÔøΩ adicionando permissÔøΩo
             {
                 r = ocorrenciaString(permissaoSolicitada.substr(2), 'r');
                 w = ocorrenciaString(permissaoSolicitada.substr(2), 'w');
@@ -2821,7 +2821,7 @@ void chmod(Disco disco[], int enderecoInodeAtual, string comando)
 
                 strcpy(disco[enderecoInode].inode.protecao, permissao);
             }
-            else if (permissaoSolicitada.at(1) == '-') //est· retirando permiss„o
+            else if (permissaoSolicitada.at(1) == '-') //estÔøΩ retirando permissÔøΩo
             {
                 r = ocorrenciaString(permissaoSolicitada.substr(2), 'r');
                 w = ocorrenciaString(permissaoSolicitada.substr(2), 'w');
@@ -2880,7 +2880,7 @@ void buscaBlocosInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, s
 {
     char enderecoToChar[300];
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
     {
         itoa(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecoToChar, 10);
@@ -2906,7 +2906,7 @@ void buscaBlocosInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, str
 {
     char enderecoToChar[300];
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
     {
         itoa(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecoToChar, 10);
@@ -2922,7 +2922,7 @@ void buscaBlocosInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, st
 {
     char enderecoToChar[300];
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
     {
         itoa(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecoToChar, 10);
@@ -2986,7 +2986,7 @@ void buscaBlocosArquivo(Disco disco[], int enderecoInodeArquivo, string &enderec
 
 
 
-// utilizado para exibir os diretÛrios do disco
+// utilizado para exibir os diretÔøΩrios do disco
 void listaDiretorioAtualIgualExplorerInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeArquivo;
@@ -2995,7 +2995,7 @@ void listaDiretorioAtualIgualExplorerInodeIndiretoSimples(Disco disco[], int end
     string blocos;
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
     {
 
@@ -3035,15 +3035,15 @@ void listaDiretorioAtualIgualExplorerInodeIndiretoSimples(Disco disco[], int end
     }
 }
 
-// utilizado para exibir os diretÛrios do disco
+// utilizado para exibir os diretÔøΩrios do disco
 void listaDiretorioAtualIgualExplorerInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int ChamadoPeloTriplo = 0)
 {
 
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
         {
             listaDiretorioAtualIgualExplorerInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
@@ -3056,11 +3056,11 @@ void listaDiretorioAtualIgualExplorerInodeIndiretoDuplo(Disco disco[], int ender
 void listaDiretorioAtualIgualExplorerInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto,  int ChamadoPeloTriplo = 0)
 {
 
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
         {
             listaDiretorioAtualIgualExplorerInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], 1);
@@ -3191,7 +3191,7 @@ void buscaBlocosIntegrosCorrompidos(Disco disco[], int enderecoInodeAtual, bool 
     }
 }
 
-// utilizado para exibir os diretÛrios do disco
+// utilizado para exibir os diretÔøΩrios do disco
 void listaLinkDiretorioAtualInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeArquivo;
@@ -3200,7 +3200,7 @@ void listaLinkDiretorioAtualInodeIndiretoSimples(Disco disco[], int enderecoInod
     string blocos;
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
     while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
     {
 
@@ -3236,15 +3236,15 @@ void listaLinkDiretorioAtualInodeIndiretoSimples(Disco disco[], int enderecoInod
     }
 }
 
-// utilizado para exibir os diretÛrios do disco
+// utilizado para exibir os diretÔøΩrios do disco
 void listaLinkDiretorioAtualInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int ChamadoPeloTriplo = 0)
 {
 
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
         {
             listaLinkDiretorioAtualInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
@@ -3253,15 +3253,15 @@ void listaLinkDiretorioAtualInodeIndiretoDuplo(Disco disco[], int enderecoInodeI
     }
 }
 
-// utilizado para exibir os diretÛrios do disco
+// utilizado para exibir os diretÔøΩrios do disco
 void listaLinkDiretorioAtualInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto,  int ChamadoPeloTriplo = 0)
 {
 
-    // verifica se a quantidade de EndereÁos no inode indireto n„o est· cheio
+    // verifica se a quantidade de EndereÔøΩos no inode indireto nÔøΩo estÔøΩ cheio
     if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess·rio e que n„o esteja cheio
+        // adiciona novos blocos enquanto a quantidade for menor que o necessÔøΩrio e que nÔøΩo esteja cheio
         while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
         {
             listaLinkDiretorioAtualInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], 1);
@@ -3336,10 +3336,10 @@ int mkdir(Disco disco[], int enderecoInodeAtual, int enderecoInodeRaiz, string c
             enderecoInodeGravacao = cd(disco, enderecoInodeGravacao, str.c_str(), enderecoInodeRaiz, caminhoAux);
         }
         else{
-            //verifico se o arquivo atual n„o È o ⁄ltimo do caminho. No ⁄ltimo, vai ser o diretÛrio que irei criar
+            //verifico se o arquivo atual nÔøΩo ÔøΩ o ÔøΩltimo do caminho. No ÔøΩltimo, vai ser o diretÔøΩrio que irei criar
             if (i < caminhoCompleto.size()-1)
             {
-                //verifico se o endereÁo È nulo, se for, n„o h· como gravar
+                //verifico se o endereÔøΩo ÔøΩ nulo, se for, nÔøΩo hÔøΩ como gravar
                 if(isEnderecoNull(existeArquivoOuDiretorio(disco, enderecoInodeGravacao, str.c_str())))
                 {
                     possivelInserir = false;
