@@ -5,7 +5,8 @@
 
 using namespace std;
 
-vector<string> split(string stringPrincipal, char delimitador=' ')
+//Divide uma string em um vetor de strings, usando um delimitador.
+vector<string> split_string(string stringPrincipal, char delimitador=' ')
 {
     istringstream stringStream(stringPrincipal);
     string stringAuxiliar;
@@ -20,33 +21,36 @@ vector<string> split(string stringPrincipal, char delimitador=' ')
     return retorno;
 }
 
-vector<string> splitPath(string stringPrincipal)
+// Divide um caminho de arquivo em um vetor de diretórios/arquivos.
+vector<string> split_file_path(string stringPrincipal)
 {
     vector<string> caminhoOrigem;
 
     if(stringPrincipal.at(0) == '/') {
         caminhoOrigem.push_back("/");
 
-        for(const string& elem : split(stringPrincipal, '/')) 
+        for(const string& elem : split_string(stringPrincipal, '/'))
         {
             if (strcmp(elem.c_str(), "") != 0)
                 caminhoOrigem.push_back(elem);
         }
     }
-    else 
+    else
 	{
-        caminhoOrigem = split(stringPrincipal, '/');
+        caminhoOrigem = split_string(stringPrincipal, '/');
     }
 
     return caminhoOrigem;
 }
 
-string lastPosition(vector<string> vector)
+// Retorna o último elemento de um vetor de strings.
+string get_last_element(vector<string> vector)
 {
     return vector.at(vector.size()-1);
 }
 
-int ocorrenciaString(string conteudo, char caracterBuscado)
+// Conta o número de ocorrências de um caractere em uma string.
+int count_occurrences(string conteudo, char caracterBuscado)
 {
     int qtd=0;
     for(int i=0; i<conteudo.size(); i++)
@@ -58,7 +62,8 @@ int ocorrenciaString(string conteudo, char caracterBuscado)
     return qtd;
 }
 
-string stringToLower(string palavra)
+//Converte uma string para minúsculas.
+string string_to_lower_case(string palavra)
 {
     for(auto& x : palavra) 
 	{ 
