@@ -1756,15 +1756,15 @@ int addDiretorioEArquivo(Disco disco[], char tipoArquivo, int enderecoInodeDiret
         {
             if (tipoArquivo == TIPO_ARQUIVO_DIRETORIO)
             {
-                convertPermissaoUGOToString(PERMISSAO_PADRAO_DIRETORIO, permissao, 0);
+                convert_permission_ugo_to_string(PERMISSAO_PADRAO_DIRETORIO, permissao, 0);
             }
             else if (tipoArquivo == TIPO_ARQUIVO_ARQUIVO)
             {
-                convertPermissaoUGOToString(PERMISSAO_PADRAO_ARQUIVO, permissao, 0);
+                convert_permission_ugo_to_string(PERMISSAO_PADRAO_ARQUIVO, permissao, 0);
             }
             else if (tipoArquivo == TIPO_ARQUIVO_LINK)
             {
-                convertPermissaoUGOToString(PERMISSAO_PADRAO_LINKSIMBOLICO, permissao, 0);
+                convert_permission_ugo_to_string(PERMISSAO_PADRAO_LINKSIMBOLICO, permissao, 0);
             }
 
             // adiciona o arquivo dentro da entrada do diret�rio
@@ -1784,7 +1784,7 @@ int criaDiretorioRaiz(Disco disco[])
     char permissao[10];
     char nomeArquivo[MAX_NOME_ARQUIVO];
 
-    convertPermissaoUGOToString(PERMISSAO_PADRAO_DIRETORIO, permissao, 0);
+    convert_permission_ugo_to_string(PERMISSAO_PADRAO_DIRETORIO, permissao, 0);
     int enderecoInodeDiretorioRaiz = criarINode(disco, TIPO_ARQUIVO_DIRETORIO, permissao);
     return enderecoInodeDiretorioRaiz;
 }
@@ -2067,10 +2067,10 @@ int cd(Disco disco[], int enderecoInodeAtual, string nomeDiretorio, int endereco
     }
     else
     {
-        if (ocorrenciaString(nomeDiretorio, '/') > 0)
+        if (count_occurrences(nomeDiretorio, '/') > 0)
         {
             int enderecoInodeOrigem = enderecoInodeAtual;
-            vector<string> caminhoOrigem = splitPath(nomeDiretorio);
+            vector<string> caminhoOrigem = split_file_path(nomeDiretorio);
 
             for(const auto& str : caminhoOrigem)
             {
@@ -2087,7 +2087,7 @@ int cd(Disco disco[], int enderecoInodeAtual, string nomeDiretorio, int endereco
                 if (disco[endereco].inode.protecao[0] == TIPO_ARQUIVO_LINK)
                 {
                     int enderecoInodeOrigem = enderecoInodeAtual;
-                    vector<string> caminhoOrigem = splitPath(disco[disco[endereco].inode.enderecoDireto[0]].ls.caminho);
+                    vector<string> caminhoOrigem = split_file_path(disco[disco[endereco].inode.enderecoDireto[0]].ls.caminho);
 
                     for(const auto& str : caminhoOrigem)
                     {
@@ -2111,9 +2111,9 @@ bool touch(Disco disco[], int enderecoInodeAtual, int enderecoInodeRaiz, char co
 {
     string comandoString(comando), caminhoAux;
     int endereco = getEnderecoNull();
-    vector<string> vetorStringSeparado = split(comandoString, ' ');
+    vector<string> vetorStringSeparado = split_string(comandoString, ' ');
 
-    if (vetorStringSeparado.size() >= 1 && vetorStringSeparado.size() <= 2 && lastPosition(split(vetorStringSeparado.at(0), '/')).size() <= MAX_NOME_ARQUIVO)
+    if (vetorStringSeparado.size() >= 1 && vetorStringSeparado.size() <= 2 && get_last_element(split_string(vetorStringSeparado.at(0), '/')).size() <= MAX_NOME_ARQUIVO)
     {
         char nomeArquivo[vetorStringSeparado.at(0).size() + 1];
         strcpy(nomeArquivo, vetorStringSeparado.at(0).c_str());
@@ -2123,14 +2123,14 @@ bool touch(Disco disco[], int enderecoInodeAtual, int enderecoInodeRaiz, char co
         	tamanhoArquivo = atoi(vetorStringSeparado.at(1).c_str());
 
         int enderecoInodeOrigem = cd(disco, enderecoInodeAtual, nomeArquivo, enderecoInodeRaiz, caminhoAux);
-        vetorStringSeparado = splitPath(nomeArquivo);
+        vetorStringSeparado = split_file_path(nomeArquivo);
 
-        endereco = existeArquivoOuDiretorio(disco, enderecoInodeOrigem, lastPosition(vetorStringSeparado).c_str());
+        endereco = existeArquivoOuDiretorio(disco, enderecoInodeOrigem, get_last_element(vetorStringSeparado).c_str());
         if (isEnderecoNull(endereco)) // ainda n�o tem nenhum arquivo criado com esse nome
         {
             int quantidadeBlocosLivres = getQuantidadeBlocosLivres(disco);
             int quantidadeBlocosUsados = getQuantidadeBlocosUsar(disco, ceil((float)tamanhoArquivo / (float)10));            
-            strcpy(nomeArquivo, lastPosition(vetorStringSeparado).c_str());
+            strcpy(nomeArquivo, get_last_element(vetorStringSeparado).c_str());
             if (quantidadeBlocosLivres - quantidadeBlocosUsados >= 0)
                 return isEnderecoValido(addDiretorioEArquivo(disco, TIPO_ARQUIVO_ARQUIVO, enderecoInodeOrigem, nomeArquivo, tamanhoArquivo));
         }
@@ -2273,7 +2273,7 @@ void vi(Disco disco[], int enderecoInodeAtual, string nomeArquivo, string &ender
             }
             
             // separa em partes usando '-'
-		    vector<string> partes = split(enderecosUtilizados, '-');
+		    vector<string> partes = split_string(enderecosUtilizados, '-');
 		
 		    // converte pra n�meros
 		    vector<int> enderecos;
@@ -2548,12 +2548,12 @@ void linkSimbolico(Disco disco[], int enderecoInodeAtual, string comando, int en
     string caminhoAux;
     vector<string> caminhosOrigemDestino, caminhoOrigem, caminhoDestino;
 
-    caminhosOrigemDestino = split(comando, ' ');
+    caminhosOrigemDestino = split_string(comando, ' ');
 
     if (caminhosOrigemDestino.size() == 2)
     {
-        caminhoOrigem = split(caminhosOrigemDestino.at(0), '/');
-        caminhoDestino = split(caminhosOrigemDestino.at(1), '/');
+        caminhoOrigem = split_string(caminhosOrigemDestino.at(0), '/');
+        caminhoDestino = split_string(caminhosOrigemDestino.at(1), '/');
     	
     	int enderecoInodeOrigem = enderecoInodeAtual;
         string tempCaminhoAux;
@@ -2567,7 +2567,7 @@ void linkSimbolico(Disco disco[], int enderecoInodeAtual, string comando, int en
 
         if (isEnderecoValido(enderecoInodeOrigem))
         {
-            string nomeDiretorioOrigem = lastPosition(caminhoOrigem);
+            string nomeDiretorioOrigem = get_last_element(caminhoOrigem);
             int enderecoEntradaDiretorio = buscaEnderecoEntradaDiretorioArquivo(disco, enderecoInodeOrigem, nomeDiretorioOrigem);
             
             if (!isEnderecoNull(enderecoEntradaDiretorio))
@@ -2603,15 +2603,15 @@ void linkFisico(Disco disco[], int enderecoInodeAtual, string comando, int ender
     string caminhoAux;
     vector<string> caminhosOrigemDestino, caminhoOrigem, caminhoDestino;
     
-    caminhosOrigemDestino = split(comando, ' ');
+    caminhosOrigemDestino = split_string(comando, ' ');
 
     if (caminhosOrigemDestino.size() == 2)
     {
         int enderecoInodeOrigem = enderecoInodeAtual, enderecoEntradaDiretorio,
         enderecoInodeDestino = enderecoInodeAtual;
 
-        caminhoOrigem = split(caminhosOrigemDestino.at(0), '/');
-        caminhoDestino = split(caminhosOrigemDestino.at(1), '/');
+        caminhoOrigem = split_string(caminhosOrigemDestino.at(0), '/');
+        caminhoDestino = split_string(caminhosOrigemDestino.at(1), '/');
 		
 		bool permissaoConcedida = true;
         
@@ -2622,7 +2622,7 @@ void linkFisico(Disco disco[], int enderecoInodeAtual, string comando, int ender
 
         if (isEnderecoValido(enderecoInodeOrigem))
         {
-            nomeDiretorioOrigem.assign(lastPosition(caminhoOrigem));
+            nomeDiretorioOrigem.assign(get_last_element(caminhoOrigem));
             enderecoEntradaDiretorio = buscaEnderecoEntradaDiretorioArquivo(disco, enderecoInodeOrigem, nomeDiretorioOrigem);
             
 			if (isEnderecoNull(enderecoEntradaDiretorio))
@@ -2764,7 +2764,7 @@ void chmod(Disco disco[], int enderecoInodeAtual, string comando)
     char perm[4];
     int r, w, x, pos;
     char permissao[11];
-    vector<string> splitComando = split(comando, ' ');
+    vector<string> splitComando = split_string(comando, ' ');
     //chmod u+w teste.old
     //chmod g+rw teste.old
     //chmod o-rwx teste.old
@@ -2773,7 +2773,7 @@ void chmod(Disco disco[], int enderecoInodeAtual, string comando)
 
     if (splitComando.size() == 2)
     {
-        string permissaoSolicitada(stringToLower(splitComando.at(0)));
+        string permissaoSolicitada(string_to_lower_case(splitComando.at(0)));
         string nomeArquivo(splitComando.at(1));
         int enderecoInode = existeArquivoOuDiretorio(disco, enderecoInodeAtual, nomeArquivo);
 
@@ -2783,9 +2783,9 @@ void chmod(Disco disco[], int enderecoInodeAtual, string comando)
 
             if (permissaoSolicitada.at(1) == '+') //est� adicionando permiss�o
             {
-                r = ocorrenciaString(permissaoSolicitada.substr(2), 'r');
-                w = ocorrenciaString(permissaoSolicitada.substr(2), 'w');
-                x = ocorrenciaString(permissaoSolicitada.substr(2), 'x');
+                r = count_occurrences(permissaoSolicitada.substr(2), 'r');
+                w = count_occurrences(permissaoSolicitada.substr(2), 'w');
+                x = count_occurrences(permissaoSolicitada.substr(2), 'x');
 
                 if (r > 0)
                     perm[0] = 'r';
@@ -2823,9 +2823,9 @@ void chmod(Disco disco[], int enderecoInodeAtual, string comando)
             }
             else if (permissaoSolicitada.at(1) == '-') //est� retirando permiss�o
             {
-                r = ocorrenciaString(permissaoSolicitada.substr(2), 'r');
-                w = ocorrenciaString(permissaoSolicitada.substr(2), 'w');
-                x = ocorrenciaString(permissaoSolicitada.substr(2), 'x');
+                r = count_occurrences(permissaoSolicitada.substr(2), 'r');
+                w = count_occurrences(permissaoSolicitada.substr(2), 'w');
+                x = count_occurrences(permissaoSolicitada.substr(2), 'x');
 
                 if (r > 0)
                     perm[0] = '-';
@@ -2866,7 +2866,7 @@ void chmod(Disco disco[], int enderecoInodeAtual, string comando)
                 if (permissaoSolicitada.at(0) >= '0' && permissaoSolicitada.at(0) <= '7')
                 {
                     int per = atoi(permissaoSolicitada.c_str());
-                    convertPermissaoUGOToString(per, permissao, 1);
+                    convert_permission_ugo_to_string(per, permissao, 1);
 
                     strcpy(disco[enderecoInode].inode.protecao, permissao);
                 }
@@ -3146,7 +3146,7 @@ void buscaBlocosIntegrosCorrompidos(Disco disco[], int enderecoInodeAtual, bool 
             buscaBlocosArquivo(disco, enderecoInodeArquivo, blocos); 
 
             vector<string> strBloco;
-            strBloco = split(blocos, '-');
+            strBloco = split_string(blocos, '-');
             int enderecoBloco;
             int quantidadeBad=0;
             for(const auto& str : strBloco)
@@ -3277,7 +3277,7 @@ void listaLinkDiretorioAtual(Disco disco[], int enderecoInodeAtual, bool primeir
     string blocos;
         
     if (primeiraVez){
-        printf("Nome\t\tTipo\t\tNum. Inode\t\tQtd. Link Fisico\n");
+        printf("Nome\t\t\tTipo\t\t\tNum. Inode\t\t\tQtd. Link Fisico\n");
     }
 
     for (direto = 0; direto < 5 && isEnderecoValido(disco[enderecoInodeAtual].inode.enderecoDireto[direto]); direto++)
@@ -3326,7 +3326,7 @@ int mkdir(Disco disco[], int enderecoInodeAtual, int enderecoInodeRaiz, string c
     string caminhoAux;
     char nomeDiretorio[MAX_NOME_ARQUIVO];
     int enderecoInodeGravacao = enderecoInodeAtual;
-    vector<string> caminhoCompleto = splitPath(comando);
+    vector<string> caminhoCompleto = split_file_path(comando);
 
     for(const auto& str : caminhoCompleto)
     {
@@ -3353,9 +3353,9 @@ int mkdir(Disco disco[], int enderecoInodeAtual, int enderecoInodeRaiz, string c
 
     if (possivelInserir && isEnderecoValido(enderecoInodeGravacao))
     {
-        if (lastPosition(caminhoCompleto).size() <= MAX_NOME_ARQUIVO)
+        if (get_last_element(caminhoCompleto).size() <= MAX_NOME_ARQUIVO)
         {
-            strcpy(nomeDiretorio, lastPosition(caminhoCompleto).c_str());
+            strcpy(nomeDiretorio, get_last_element(caminhoCompleto).c_str());
             return addDiretorioEArquivo(disco, 'd', enderecoInodeGravacao, nomeDiretorio);
         }
     }
