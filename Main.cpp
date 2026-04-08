@@ -278,9 +278,9 @@ void execucao_sistema(Disco disco[], int quantidadeBlocosTotais, int enderecoIno
 // Inicializa o sistema, criando o diretório raiz e iniciando a execução.
 void inicializa_sistema(Disco disco[], int quantidadeBlocosTotais)
 {
-    inicializaSistemaBlocos(disco, quantidadeBlocosTotais);
+    inicializa_sistema_blocos(disco, quantidadeBlocosTotais);
     int enderecoInodeRaiz = criaDiretorioRaiz(disco);
-    execucaoSistema(disco, quantidadeBlocosTotais, enderecoInodeRaiz);
+    execucao_sistema(disco, quantidadeBlocosTotais, enderecoInodeRaiz);
 }
 
 // Obtém a quantidade total de blocos do disco a partir da entrada do usuário.
@@ -312,7 +312,7 @@ int obter_quantidade_blocos_totais() {
 	return quantidadeBlocosTotais;
 }
 
-// Função principal do programa.
+// funcao principal do programa.
 int main()
 {
     int quantidadeBlocosTotais;
@@ -320,12 +320,12 @@ int main()
     
     system("cls");
     
-    quantidadeBlocosTotais = QuantidadeBlocosTotais();
+    quantidadeBlocosTotais = obter_quantidade_blocos_totais();
     
     printf("Quantidade de blocos selecionada: %d",quantidadeBlocosTotais);
     
     Disco disco[quantidadeBlocosTotais];
-    inicializaSistema(disco, quantidadeBlocosTotais);
+    inicializa_sistema(disco, quantidadeBlocosTotais);
     
     return 0;
 }
