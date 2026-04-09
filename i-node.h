@@ -1,5 +1,5 @@
-#include "permissao.h"
-#include "split.h"
+﻿wae#include "Permissao.h"
+#include "dividir.h"
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -10,7 +10,7 @@ using namespace std;
 
 #define TIPO_ARQUIVO_DIRETORIO 'd'
 #define TIPO_ARQUIVO_ARQUIVO '-'
-#define TIPO_ARQUIVO_LINK 'l'
+#define TIPO_ARQUIVO_LINK 'detalhado'
 
 #define MAX_NOME_ARQUIVO 14
 #define DIRETORIO_LIMITE_ARQUIVOS 10
@@ -50,44 +50,44 @@ void textcolor (int color)
 }
 
 
-// INODE CONTROLA COMO EST�� SENDO GRAVADO O ARQUIVO, EM QUAIS BLOCOS EST�� GRAVADO O CONTE�DO DO ARQUIVO, AS PERMISS�ES, DATA
+// INODE CONTROLA COMO ESTï¿½ï¿½ SENDO GRAVADO O ARQUIVO, EM QUAIS BLOCOS ESTï¿½ï¿½ GRAVADO O CONTEï¿½DO DO ARQUIVO, AS PERMISSï¿½ES, DATA
 struct INode
 {
     /*
-        Campo de protecao (estilo Linux):
+        Campo de seguranca (estilo Linux):
 
         [0]  -> Tipo:
                'd' = diretorio
                '-' = arquivo regular
-               'l' = link
+               'detalhado' = link
 
-        [1-3] -> permissoes do proprietario (rwx)
-        [4-6] -> permissoes do grupo (rwx)
+        [1-3] -> permissoes do dono (rwx)
+        [4-6] -> permissoes do categoria (rwx)
         [7-9] -> permissoes de outros (rwx)
 
         [10]  -> '\0' (fim da string)
     */
-    char protecao[11];
+    char seguranca[11];
 
     //numero de links fisicos apontando para este inode
-    int contadorLinkFisico;
+    int quantidadeLinkFisico;
 
-    //identificacao do dono e grupo
-    int proprietario;
-    int grupo;
+    //identificacao do dono e categoria
+    int dono;
+    int categoria;
 
     //datas (armazenadas como string)
-    char dataCriacao[20];
-    char dataUltimoAcesso[20];
-    char dataUltimaAlteracao[20];
+    char momentoCriacao[20];
+    char momentoUltimoAcesso[20];
+    char momentoUltimaAlteracao[20];
 
     //tamanho do arquivo em bytes
-    long long int tamanhoArquivo;
+    long long int dimensaoArquivo;
 
     /*
         ponteiros para blocos de dados:
 
-        - enderecoDireto: at� 5 blocos diretos
+        - enderecoDireto: atï¿½ 5 blocos diretos
         - enderecoSimplesIndireto: aponta para um bloco que contem outros ponteiros
         - enderecoDuploIndireto: ponteiro para bloco de ponteiros de ponteiros
         - enderecoTriploIndireto: nivel mais profundo de indirecao
@@ -102,37 +102,37 @@ struct INode
 struct INodeIndireto
 {
     int endereco[MAX_INODEINDIRETO];
-    int TL;
+    int tamanhoLista;
 };
 
 struct Arquivo
 {
-    int enderecoINode;
-    char nome[MAX_NOME_ARQUIVO];
+    int localizacaoINode;
+    char nomenclatura[MAX_NOME_ARQUIVO];
 };
 
 struct Diretorio
 {
     Arquivo arquivo[DIRETORIO_LIMITE_ARQUIVOS];
-    int TL;
+    int tamanhoLista;
 };
 
 struct LinkSimbolico
 {
-    string caminho;
+    string rota;
 };
 
 //pilha de discos
 struct ListaBlocoLivre
 {
-    int topo;
+    int inicio;
     int endereco[QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE];
     int enderecoBlocoProx;//endreco do proximo bloco de pilha no disco
 };
 
 struct Disco
 {
-    int bad; //identificador para saber se o bloco esta em BAD ou nao
+    int bad; //identificador para saber se o bloco esta em bad ou nao
 
     INode inode;
     INodeIndireto inodeIndireto;
@@ -148,77 +148,77 @@ struct exibicaoEndereco
 };
 
 //declaracao dos principais metodos
-int criarINode(Disco disco[], char tipoArquivo, char permissao[10], int tamanhoArquivo, int enderecoInodePai, string caminhoLink);
-int addDiretorioEArquivo(Disco disco[], char tipoArquivo, int enderecoInodeDiretorioAtual, char nomeDiretorioArquivoNovo[MAX_NOME_ARQUIVO], int tamanhoArquivo, string caminhoLink, int enderecoInodeCriado);
-void addArquivoNoDiretorio(Disco disco[], int enderecoDiretorio, int enderecoInodeCriado, char nomeDiretorioArquivo[MAX_NOME_ARQUIVO]);
-int getQuantidadeBlocosUsar(Disco disco[], int quantidadeBlocosNecessarios);
-void getQuantidadeBlocosMaiorArquivo(Disco disco[], int quantidadeBlocosDisponivel, int &quantidadeUsou, int &quantidadeRealUtilizada);
-void vi(Disco disco[], int enderecoInodeAtual, string nomeArquivo, string &enderecosUtilizados);
-bool rm(Disco disco[], int enderecoInodeAtual, string nomeArquivo, int primeiraVez);
-bool rmdir(Disco disco[], int enderecoInodeAtual, string nomeDiretorio, int &contadorDiretorio, int primeiraVez);
-int cd(Disco disco[], int enderecoInodeAtual, string nomeDiretorio, int enderecoInodeRaiz, string &caminhoAbsoluto);
-void buscaBlocosArquivo(Disco disco[], int enderecoInodeArquivo, string &enderecosUtilizados);
-void listaDiretorioAtualIgualExplorer(Disco disco[], int enderecoInodeAtual, bool primeiraVez);
-void listaLinkDiretorioAtual(Disco disco[], int enderecoInodeAtual, bool primeiraVez);
+int construirINode(Disco disco[], char tipoArquivo, char privilegio[10], int dimensaoArquivo, int enderecoInodePai, string caminhoLink);
+int inserirDiretorioEArquivo(Disco disco[], char tipoArquivo, int enderecoInodeDiretorioAtual, char nomeDiretorioArquivoNovo[MAX_NOME_ARQUIVO], int dimensaoArquivo, string caminhoLink, int enderecoInodeCriado);
+void adicionarArquivoNoDiretorio(Disco disco[], int enderecoDiretorio, int enderecoInodeCriado, char nomeDiretorioArquivo[MAX_NOME_ARQUIVO]);
+int obterQuantidadeBlocosUtilizar(Disco disco[], int quantidadeBlocosNecessarios);
+void obterQuantidadeBlocosPeloMaiorArquivo(Disco disco[], int quantidadeBlocosDisponivel, int &quantidadeUsou, int &quantidadeRealUtilizada);
+void abrirArquivoParaEdicao(Disco disco[], int localizacaoINodeAtual, string nomeArquivo, string &enderecosUtilizados);
+bool deletarArquivo(Disco disco[], int localizacaoINodeAtual, string nomeArquivo, int primeiraVez);
+bool deletarDiretorio(Disco disco[], int localizacaoINodeAtual, string nomeDiretorio, int &contadorDiretorio, int primeiraVez);
+int alterarDiretorio(Disco disco[], int localizacaoINodeAtual, string nomeDiretorio, int localizacaoINodeRaiz, string &rotaAbsoluta);
+void procurarBlocosDoArquivo(Disco disco[], int enderecoInodeArquivo, string &enderecosUtilizados);
+void listaDiretorioAtualIgualExplorer(Disco disco[], int localizacaoINodeAtual, bool primeiraVez);
+void mostrarLinksNoDiretorio(Disco disco[], int localizacaoINodeAtual, bool primeiraVez);
 
-//pegando o nome do proprietario (usuario)
-string getNomeProprietario(int proprietarioCod)
+//pegando o nomenclatura do dono (usuario)
+string obterNomeProprietario(int codigoProprietario)
 {
-    string nome;
+    string nomenclatura;
 
-    switch(proprietarioCod)
+    switch(codigoProprietario)
     {
 	    case 1000:
-	        nome.assign("root");
+	        nomenclatura.assign("root");
 	        break;
 	
 	    default:
-	        nome.assign("nao definido");
+	        nomenclatura.assign("nao definido");
     }
 
-    return nome;
+    return nomenclatura;
 }
 
-//pegando nome do grupo desse proprietario
-string getNomeGrupo(int proprietarioCod)
+//pegando nomenclatura do categoria desse dono
+string obterNomeGrupo(int codigoProprietario)
 {
-    string nome;
+    string nomenclatura;
 
-    switch (proprietarioCod)
+    switch (codigoProprietario)
     {
 	    case 1000:
-	        nome.assign("root");
+	        nomenclatura.assign("root");
 	        break;
 	    default:
-	        nome.assign("nao definido");
+	        nomenclatura.assign("nao definido");
     }
 
-    return nome;
+    return nomenclatura;
 }
 
 //inicializando disco
-void initDisco(Disco &disco)
+void inicializarDisco(disco &disco)
 {
-    disco.bad = 0; //bad = 0 -> indica que nao tem blocos defeituosos
-    disco.diretorio.TL = 0; //diretorio vazio
-    disco.inode.protecao[0] = '\0'; //inode sem tipo definido
-    disco.inodeIndireto.TL = 0;
-    disco.lbl.topo = -1;
-    disco.ls.caminho[0] = '\0';
+    disco.bad = 0; //bad = 0 -> indica que nao tem blocos bads
+    disco.diretorio.tamanhoLista = 0; //diretorio vazio
+    disco.inode.seguranca[0] = '\0'; //inode sem tipo definido
+    disco.inodeIndireto.tamanhoLista = 0;
+    disco.lbl.inicio = -1;
+    disco.ls.rota[0] = '\0';
 }
 
-//inicializacao parcial do disco (sem mexer nos bloco defeituosos)
-void initDiscoR(Disco &disco)
+//inicializacao parcial do disco (sem mexer nos bloco bads)
+void inicializarDiscoRestrito(disco &disco)
 {
-    disco.diretorio.TL = 0;
-    disco.inode.protecao[0] = '\0';
-    disco.inodeIndireto.TL = 0;
-    disco.lbl.topo = -1;
-    disco.ls.caminho[0] = '\0';
+    disco.diretorio.tamanhoLista = 0;
+    disco.inode.seguranca[0] = '\0';
+    disco.inodeIndireto.tamanhoLista = 0;
+    disco.lbl.inicio = -1;
+    disco.ls.rota[0] = '\0';
 }
 
 //pegando a data e hora atual do sistema (retorna ja formatada: dd/mm/aaaa hh:mm:ss)
-void setDataHoraAtualSistema(char dataAtual[])
+void definirDataHoraAtualSistema(char dataAtual[])
 {
     time_t t;
     t = time(NULL);
@@ -228,63 +228,63 @@ void setDataHoraAtualSistema(char dataAtual[])
 }
 
 //define valor invalido como -1
-int getEnderecoNull()
+int obterEnderecoInvalido()
 {
     return -1;
 }
 
 //atribui o valor invalido a uma variavel
-void setEnderecoNull(int &endereco)
+void definirEnderecoInvalido(int &endereco)
 {
-    endereco = getEnderecoNull();
+    endereco = obterEnderecoInvalido();
 }
 
 //verifica se o endereco passado e invalido
-char isEnderecoNull(int endereco)
+char verificarSeEnderecoEhInvalido(int endereco)
 {
-    return endereco == getEnderecoNull();
+    return endereco == obterEnderecoInvalido();
 }
 
-//verifica se o endereco � valido
-char isEnderecoValido(int endereco)
+//verifica se o endereco ï¿½ valido
+char verificarSeEnderecoEhValido(int endereco)
 {
-    return !isEnderecoNull(endereco);
+    return !verificarSeEnderecoEhInvalido(endereco);
 }
 
 //inicializando pilha de blocos livres
-void initListaBlocosLivre(ListaBlocoLivre &lbl)
+void inicializarListaBlocosLivres(ListaBlocoLivre &lbl)
 {
-    setEnderecoNull(lbl.topo);
-    setEnderecoNull(lbl.enderecoBlocoProx);
+    definirEnderecoInvalido(lbl.inicio);
+    definirEnderecoInvalido(lbl.enderecoBlocoProx);
 }
 
 //verifica se a pilha de blocos livre esta cheia
-char isFullListaBlocosLivre(ListaBlocoLivre lbl)
+char verificarSeListaBlocosLivresEstaCheia(ListaBlocoLivre lbl)
 {
-    return lbl.topo == QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE - 1;
+    return lbl.inicio == QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE - 1;
 }
 
 //verifica se a lista de blocos
-char isEmptyListaBlocoLivre(ListaBlocoLivre lbl)
+char verificarSeListaBlocosLivresEstaVazia(ListaBlocoLivre lbl)
 {
-    return lbl.topo == getEnderecoNull();
+    return lbl.inicio == obterEnderecoInvalido();
 }
 
-//verifica se o endereco esta marcado como um bloco defeituoso
-char isEnderecoBad(Disco disco[], int endereco)
+//verifica se o endereco esta marcado como um bloco bad
+char verificarSeEnderecoEstaDescalibrado(Disco disco[], int endereco)
 {
     return disco[endereco].bad;
 }
 
 //contador da quantidade de blocos livres existente na pilha
-int getQuantidadeBlocosLivres(Disco disco[])
+int obterQuantidadeBlocosDisponveis(Disco disco[])
 {
     int enderecoProxBloco = ENDERECO_CABECA_LISTA;
     int quantidadeBlocosLivres = 0;
 
-    while(enderecoProxBloco != -1 && disco[enderecoProxBloco].lbl.topo > -1)
+    while(enderecoProxBloco != -1 && disco[enderecoProxBloco].lbl.inicio > -1)
     {
-        for(int j = 0; j <= disco[enderecoProxBloco].lbl.topo; j++)
+        for(int j = 0; j <= disco[enderecoProxBloco].lbl.inicio; j++)
         {
             if(!disco[disco[enderecoProxBloco].lbl.endereco[j]].bad)
                 quantidadeBlocosLivres++;
@@ -297,46 +297,46 @@ int getQuantidadeBlocosLivres(Disco disco[])
 }
 
 //adiciona novo bloco livre na lista
-void pushListaBlocoLivre(Disco disco[], int endereco)
+void adicionarBlocoLivreNaLista(Disco disco[], int endereco)
 {
     int enderecoBlocoAtual = ENDERECO_CABECA_LISTA;
     int enderecoProxBloco = disco[ENDERECO_CABECA_LISTA].lbl.enderecoBlocoProx;
 
 	//garante que a lista contem mais de um bloco, entao anda ate o final da lista
-    while(isEnderecoValido(enderecoProxBloco)) 
+    while(verificarSeEnderecoEhValido(enderecoProxBloco)) 
     {
         enderecoBlocoAtual = enderecoProxBloco;
         enderecoProxBloco = disco[enderecoProxBloco].lbl.enderecoBlocoProx;
     }
 
     //se o ultimo bloco encontrado da lista nao esta cheio, adiciona o endereco no final
-    if(!isFullListaBlocosLivre(disco[enderecoBlocoAtual].lbl))
-        disco[enderecoBlocoAtual].lbl.endereco[++disco[enderecoBlocoAtual].lbl.topo] = endereco;
+    if(!verificarSeListaBlocosLivresEstaCheia(disco[enderecoBlocoAtual].lbl))
+        disco[enderecoBlocoAtual].lbl.endereco[++disco[enderecoBlocoAtual].lbl.inicio] = endereco;
     else
     {
         //caso estiver cheio, adiciona mais um bloco na lista
         disco[enderecoBlocoAtual].lbl.enderecoBlocoProx = enderecoBlocoAtual + 1;
 
         //adiciona o endereco
-        disco[enderecoBlocoAtual + 1].lbl.endereco[++disco[enderecoBlocoAtual + 1].lbl.topo] = endereco;
+        disco[enderecoBlocoAtual + 1].lbl.endereco[++disco[enderecoBlocoAtual + 1].lbl.inicio] = endereco;
     }
 }
 
 //retira um bloco livre da lista
-int popListaBlocoLivre(Disco disco[])
+int removerBlocoLivreDaLista(Disco disco[])
 {
     int enderecoLivre;
     int enderecoBlocoAtual = ENDERECO_CABECA_LISTA;
     int enderecoProxBloco = disco[enderecoBlocoAtual].lbl.enderecoBlocoProx;
 
-    if (!isEmptyListaBlocoLivre(disco[enderecoBlocoAtual].lbl)) //verifica se tem elementos na lista
+    if (!verificarSeListaBlocosLivresEstaVazia(disco[enderecoBlocoAtual].lbl)) //verifica se tem elementos na lista
     {
-        if (isEnderecoNull(enderecoProxBloco)) //se for igual a -1, quer dizer que nao ha proximo bloco da lista
+        if (verificarSeEnderecoEhInvalido(enderecoProxBloco)) //se for igual a -1, quer dizer que nao ha proximo bloco da lista
         {
-            enderecoLivre = disco[ENDERECO_CABECA_LISTA].lbl.endereco[disco[ENDERECO_CABECA_LISTA].lbl.topo--];
+            enderecoLivre = disco[ENDERECO_CABECA_LISTA].lbl.endereco[disco[ENDERECO_CABECA_LISTA].lbl.inicio--];
 
-            if (isEnderecoBad(disco, enderecoLivre))
-                return popListaBlocoLivre(disco);
+            if (verificarSeEnderecoEstaDescalibrado(disco, enderecoLivre))
+                return removerBlocoLivreDaLista(disco);
 
             return enderecoLivre;
         }
@@ -344,47 +344,47 @@ int popListaBlocoLivre(Disco disco[])
         {
             int enderecoBlocoAnterior = enderecoBlocoAtual;
 
-            while (isEnderecoValido(enderecoProxBloco)) // significa que a lista tem mais de um bloco, entao percorre ate o fim da lista
+            while (verificarSeEnderecoEhValido(enderecoProxBloco)) // significa que a lista tem mais de um bloco, entao percorre ate o fim da lista
             {
                 enderecoBlocoAnterior = enderecoBlocoAtual;
                 enderecoBlocoAtual = enderecoProxBloco;
                 enderecoProxBloco = disco[enderecoBlocoAtual].lbl.enderecoBlocoProx;
             }
 
-            enderecoLivre = disco[enderecoBlocoAtual].lbl.endereco[disco[enderecoBlocoAtual].lbl.topo--];
+            enderecoLivre = disco[enderecoBlocoAtual].lbl.endereco[disco[enderecoBlocoAtual].lbl.inicio--];
 
             // caso o bloco atual nao tenha mais nenhum item apos a remocao, altera o apontamento do anterior para -1
-            if(isEmptyListaBlocoLivre(disco[enderecoBlocoAtual].lbl))
+            if(verificarSeListaBlocosLivresEstaVazia(disco[enderecoBlocoAtual].lbl))
             {
                 // bloco anterior para de apontar para o bloco atual, quebrando a lista
-                setEnderecoNull(disco[enderecoBlocoAnterior].lbl.enderecoBlocoProx);
+                definirEnderecoInvalido(disco[enderecoBlocoAnterior].lbl.enderecoBlocoProx);
             }
 
-            if (isEnderecoBad(disco, enderecoLivre))
-                return popListaBlocoLivre(disco);
+            if (verificarSeEnderecoEstaDescalibrado(disco, enderecoLivre))
+                return removerBlocoLivreDaLista(disco);
 
             return enderecoLivre;
         }
     }
 
-    return getEnderecoNull();
+    return obterEnderecoInvalido();
 }
 
 //exibe todos os blocos livres da lista
-void exibeListaBlocoLivre(Disco disco[])
+void mostrarListaBlocosLivres(Disco disco[])
 {
-    int i = 0, topo;
+    int i = 0, inicio;
     printf("\n");
     int enderecoProxBloco = ENDERECO_CABECA_LISTA;
 
     while (enderecoProxBloco != -1)
     {
-        topo = disco[enderecoProxBloco].lbl.topo;
+        inicio = disco[enderecoProxBloco].lbl.inicio;
         printf("\n -- Lista de Blocos livres: %d --\n", enderecoProxBloco);
 
-        while (!isEnderecoNull(topo))
+        while (!verificarSeEnderecoEhInvalido(inicio))
         {
-            printf(" [ %d ] ", disco[enderecoProxBloco].lbl.endereco[topo--]);
+            printf(" [ %d ] ", disco[enderecoProxBloco].lbl.endereco[inicio--]);
         }
 
         printf("\n");
@@ -392,36 +392,36 @@ void exibeListaBlocoLivre(Disco disco[])
     }
 }
 
-void addExibicaoEndereco(exibicaoEndereco enderecos[], int &TL, int endereco, char info)
+void adicionarEnderecoNaExibicao(exibicaoEndereco enderecos[], int &tamanhoLista, int endereco, char info)
 {
-    enderecos[TL].endereco = endereco;
-    enderecos[TL++].info = info;
+    enderecos[tamanhoLista].endereco = endereco;
+    enderecos[tamanhoLista++].info = info;
 }
 
-int criarINodeIndireto(Disco disco[])
+int construirINodeIndireto(Disco disco[])
 {
-    int blocoLivreInodeIndireto = popListaBlocoLivre(disco);
+    int blocoLivreInodeIndireto = removerBlocoLivreDaLista(disco);
     for (int i = 0; i < MAX_INODEINDIRETO; i++)
     {
-        setEnderecoNull(disco[blocoLivreInodeIndireto].inodeIndireto.endereco[i]);
+        definirEnderecoInvalido(disco[blocoLivreInodeIndireto].inodeIndireto.endereco[i]);
     }
 
     return blocoLivreInodeIndireto;
 }
 
 //utilizado para inserir ao criar o inode
-void inserirInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int enderecoInodePrincipal, int &quantidadeBlocosNecessarios, int InseridoPeloTriplo = 0)
+void inserirINodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int enderecoInodePrincipal, int &quantidadeBlocosNecessarios, int InseridoPeloTriplo = 0)
 {
     int quantidadeBlocosUtilizados = 0;
     //verifica se a quantidade de enderecos no inode indireto nao esta cheio
-    if(disco[enderecoInodeIndireto].inodeIndireto.TL < MAX_INODEINDIRETO - InseridoPeloTriplo)
+    if(disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista < MAX_INODEINDIRETO - InseridoPeloTriplo)
     {
-        int inicio = disco[enderecoInodeIndireto].inodeIndireto.TL;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
+        int inicio = disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista;
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
         while (inicio < quantidadeBlocosNecessarios && inicio < MAX_INODEINDIRETO - InseridoPeloTriplo)
         {
-            disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio] = popListaBlocoLivre(disco);
-            disco[enderecoInodeIndireto].inodeIndireto.TL++;
+            disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio] = removerBlocoLivreDaLista(disco);
+            disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista++;
             quantidadeBlocosUtilizados++;
             inicio++;
         }
@@ -432,89 +432,89 @@ void inserirInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int e
 
     if (InseridoPeloTriplo && quantidadeBlocosNecessarios > 0)
     {
-        char permissao[10];
+        char privilegio[10];
         for (int i = 0; i < 10; i++)
         {
-            disco[enderecoInodePrincipal].inode.protecao[i];
+            disco[enderecoInodePrincipal].inode.seguranca[i];
         }
 
-        strncpy(permissao, disco[enderecoInodePrincipal].inode.protecao + 1, 10);
+        strncpy(privilegio, disco[enderecoInodePrincipal].inode.seguranca + 1, 10);
 
-        disco[enderecoInodeIndireto].inodeIndireto.endereco[disco[enderecoInodeIndireto].inodeIndireto.TL] = criarINode(disco,
-                                                                                                                        disco[enderecoInodePrincipal].inode.protecao[0],
-                                                                                                                        permissao,
+        disco[enderecoInodeIndireto].inodeIndireto.endereco[disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista] = construirINode(disco,
+                                                                                                                        disco[enderecoInodePrincipal].inode.seguranca[0],
+                                                                                                                        privilegio,
                                                                                                                         quantidadeBlocosNecessarios * 10,
                                                                                                                         enderecoInodePrincipal, "");
 
         // conseguiu criar o inode
-        if (isEnderecoValido(disco[enderecoInodeIndireto].inodeIndireto.endereco[disco[enderecoInodeIndireto].inodeIndireto.TL]))
+        if (verificarSeEnderecoEhValido(disco[enderecoInodeIndireto].inodeIndireto.endereco[disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista]))
         {
-            disco[enderecoInodeIndireto].inodeIndireto.TL++;
+            disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista++;
         }
     }
 }
 
 // utilizado para inserir ao criar o inode
-void inserirInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int enderecoInodePrincipal, int &quantidadeBlocosNecessarios, int InseridoPeloTriplo = 0)
+void inserirINodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int enderecoInodePrincipal, int &quantidadeBlocosNecessarios, int InseridoPeloTriplo = 0)
 {
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL < MAX_INODEINDIRETO)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista < MAX_INODEINDIRETO)
     {
-        int inicio = disco[enderecoInodeIndireto].inodeIndireto.TL;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
+        int inicio = disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista;
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
         while (inicio < quantidadeBlocosNecessarios && inicio < MAX_INODEINDIRETO)
         {
-            if (isEnderecoNull(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
+            if (verificarSeEnderecoEhInvalido(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
             {
-                disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio] = criarINodeIndireto(disco);
+                disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio] = construirINodeIndireto(disco);
             }
 
-            inserirInodeIndiretoSimples(disco,
+            inserirINodeIndiretoSimples(disco,
                                         disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio],
                                         enderecoInodePrincipal,
                                         quantidadeBlocosNecessarios,
                                         InseridoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
 
-            disco[enderecoInodeIndireto].inodeIndireto.TL++;
+            disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista++;
             inicio++;
         }
     }
 }
 
 // utilizado para inserir ao criar o inode
-void inserirInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, int enderecoInodePrincipal, int &quantidadeBlocosNecessarios)
+void inserirINodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, int enderecoInodePrincipal, int &quantidadeBlocosNecessarios)
 {
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL < MAX_INODEINDIRETO)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista < MAX_INODEINDIRETO)
     {
-        int inicio = disco[enderecoInodeIndireto].inodeIndireto.TL;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
+        int inicio = disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista;
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
         while (inicio < quantidadeBlocosNecessarios && inicio < MAX_INODEINDIRETO)
         {
-            if (isEnderecoNull(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
+            if (verificarSeEnderecoEhInvalido(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
             {
-                disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio] = criarINodeIndireto(disco);
+                disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio] = construirINodeIndireto(disco);
             }
 
-            inserirInodeIndiretoDuplo(disco,
+            inserirINodeIndiretoDuplo(disco,
                                       disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio],
                                       enderecoInodePrincipal,
                                       quantidadeBlocosNecessarios,
                                       1);
 
-            disco[enderecoInodeIndireto].inodeIndireto.TL++;
+            disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista++;
             inicio++;
         }
     }
 }
 
-void preInsereInodeIndiretoSimples(Disco disco[], int &quantidadeBlocosNecessarios, int &quantidadeBlocosUsou, int InseridoPeloTriplo = 0)
+void preInserirINodeIndiretoSimples(Disco disco[], int &quantidadeBlocosNecessarios, int &quantidadeBlocosUsou, int InseridoPeloTriplo = 0)
 {
     int quantidadeBlocosUtilizados = 0;
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
     while (inicio < quantidadeBlocosNecessarios && inicio < MAX_INODEINDIRETO - InseridoPeloTriplo)
     {
         quantidadeBlocosUtilizados++;
@@ -527,21 +527,21 @@ void preInsereInodeIndiretoSimples(Disco disco[], int &quantidadeBlocosNecessari
     if (InseridoPeloTriplo && quantidadeBlocosNecessarios > 0)
     {
         quantidadeBlocosUsou++;
-        quantidadeBlocosUsou += getQuantidadeBlocosUsar(disco, quantidadeBlocosNecessarios) - 1;
+        quantidadeBlocosUsou += obterQuantidadeBlocosUtilizar(disco, quantidadeBlocosNecessarios) - 1;
     }
 }
 
 // utilizado para inserir ao criar o inode
-void preInsereInodeIndiretoDuplo(Disco disco[], int &quantidadeBlocosNecessarios, int &quantidadeBlocosUsou, int InseridoPeloTriplo = 0)
+void preInserirINodeIndiretoDuplo(Disco disco[], int &quantidadeBlocosNecessarios, int &quantidadeBlocosUsou, int InseridoPeloTriplo = 0)
 {
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
     while (inicio < quantidadeBlocosNecessarios && inicio < MAX_INODEINDIRETO)
     {
         quantidadeBlocosUsou++;
-        preInsereInodeIndiretoSimples(disco, quantidadeBlocosNecessarios, quantidadeBlocosUsou,
+        preInserirINodeIndiretoSimples(disco, quantidadeBlocosNecessarios, quantidadeBlocosUsou,
                                       InseridoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
 
         inicio++;
@@ -549,15 +549,15 @@ void preInsereInodeIndiretoDuplo(Disco disco[], int &quantidadeBlocosNecessarios
 }
 
 // utilizado para inserir ao criar o inode
-void preInsereInodeIndiretoTriplo(Disco disco[], int &quantidadeBlocosNecessarios, int &quantidadeBlocosUsou)
+void preInserirINodeIndiretoTriplo(Disco disco[], int &quantidadeBlocosNecessarios, int &quantidadeBlocosUsou)
 {
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
     while (inicio < quantidadeBlocosNecessarios && inicio < MAX_INODEINDIRETO)
     {
         quantidadeBlocosUsou++;
-        preInsereInodeIndiretoDuplo(disco, quantidadeBlocosNecessarios, quantidadeBlocosUsou, 1);
+        preInserirINodeIndiretoDuplo(disco, quantidadeBlocosNecessarios, quantidadeBlocosUsou, 1);
 
         inicio++;
     }
@@ -565,13 +565,13 @@ void preInsereInodeIndiretoTriplo(Disco disco[], int &quantidadeBlocosNecessario
 
 
 
-void buscaMaiorArqInodeIndiretoSimples(Disco disco[], int quantidadeBlocosDisponivel, int &quantidadeBlocosUsou, int &quantidadeRealUtilizada, int InseridoPeloTriplo = 0)
+void procurarMaiorArqInodeIndiretoSimples(Disco disco[], int quantidadeBlocosDisponivel, int &quantidadeBlocosUsou, int &quantidadeRealUtilizada, int InseridoPeloTriplo = 0)
 {
     int quantidadeBlocosUtilizados = 0;
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
     while (inicio < quantidadeBlocosDisponivel && quantidadeBlocosUsou <  quantidadeBlocosDisponivel && inicio < MAX_INODEINDIRETO - InseridoPeloTriplo)
     {
         quantidadeBlocosUtilizados++;
@@ -584,22 +584,22 @@ void buscaMaiorArqInodeIndiretoSimples(Disco disco[], int quantidadeBlocosDispon
     if (InseridoPeloTriplo && quantidadeBlocosUsou < quantidadeBlocosDisponivel)
     {
         quantidadeBlocosUsou++;
-        getQuantidadeBlocosMaiorArquivo(disco, quantidadeBlocosDisponivel, quantidadeBlocosUsou, quantidadeRealUtilizada);
+        obterQuantidadeBlocosPeloMaiorArquivo(disco, quantidadeBlocosDisponivel, quantidadeBlocosUsou, quantidadeRealUtilizada);
         quantidadeBlocosUsou--;
     }
 }
 
 // utilizado para inserir ao criar o inode
-void buscaMaiorArqInodeIndiretoDuplo(Disco disco[], int quantidadeBlocosDisponivel, int &quantidadeBlocosUsou, int &quantidadeRealUtilizada, int InseridoPeloTriplo = 0)
+void procurarMaiorArqInodeIndiretoDuplo(Disco disco[], int quantidadeBlocosDisponivel, int &quantidadeBlocosUsou, int &quantidadeRealUtilizada, int InseridoPeloTriplo = 0)
 {
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
     while (inicio < quantidadeBlocosDisponivel && quantidadeBlocosUsou <  quantidadeBlocosDisponivel &&inicio < MAX_INODEINDIRETO)
     {
         quantidadeBlocosUsou++;
-        buscaMaiorArqInodeIndiretoSimples(disco, quantidadeBlocosDisponivel, quantidadeBlocosUsou, quantidadeRealUtilizada,
+        procurarMaiorArqInodeIndiretoSimples(disco, quantidadeBlocosDisponivel, quantidadeBlocosUsou, quantidadeRealUtilizada,
                                       InseridoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
 
         inicio++;
@@ -607,21 +607,21 @@ void buscaMaiorArqInodeIndiretoDuplo(Disco disco[], int quantidadeBlocosDisponiv
 }
 
 // utilizado para inserir ao criar o inode
-void buscaMaiorArqInodeIndiretoTriplo(Disco disco[], int quantidadeBlocosDisponivel, int &quantidadeBlocosUsou, int &quantidadeRealUtilizada)
+void procurarMaiorArqInodeIndiretoTriplo(Disco disco[], int quantidadeBlocosDisponivel, int &quantidadeBlocosUsou, int &quantidadeRealUtilizada)
 {
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
     while (inicio < quantidadeBlocosDisponivel &&quantidadeBlocosUsou <  quantidadeBlocosDisponivel && inicio < MAX_INODEINDIRETO)
     {
         quantidadeBlocosUsou++;
-        buscaMaiorArqInodeIndiretoDuplo(disco, quantidadeBlocosDisponivel, quantidadeBlocosUsou, quantidadeRealUtilizada, 1);
+        procurarMaiorArqInodeIndiretoDuplo(disco, quantidadeBlocosDisponivel, quantidadeBlocosUsou, quantidadeRealUtilizada, 1);
 
         inicio++;
     }
 }
 
-int getQuantidadeBlocosUsar(Disco disco[], int quantidadeBlocosNecessarios)
+int obterQuantidadeBlocosUtilizar(Disco disco[], int quantidadeBlocosNecessarios)
 {    
     int quantidadeUsou = 0;
     int quantidadeBlocosUtilizados = 0;
@@ -637,25 +637,25 @@ int getQuantidadeBlocosUsar(Disco disco[], int quantidadeBlocosNecessarios)
     if (quantidadeBlocosFaltantes > 0)
     {
         quantidadeUsou++;
-        preInsereInodeIndiretoSimples(disco, quantidadeBlocosFaltantes, quantidadeUsou);
+        preInserirINodeIndiretoSimples(disco, quantidadeBlocosFaltantes, quantidadeUsou);
     }
     if (quantidadeBlocosFaltantes > 0)
     {
         quantidadeUsou++;
-        preInsereInodeIndiretoDuplo(disco, quantidadeBlocosFaltantes, quantidadeUsou);
+        preInserirINodeIndiretoDuplo(disco, quantidadeBlocosFaltantes, quantidadeUsou);
     }
 
     if (quantidadeBlocosFaltantes > 0)
     {
         quantidadeUsou++;
-        preInsereInodeIndiretoTriplo(disco, quantidadeBlocosFaltantes, quantidadeUsou);
+        preInserirINodeIndiretoTriplo(disco, quantidadeBlocosFaltantes, quantidadeUsou);
     }
 
     return quantidadeUsou + 1;
 }
 
 
-void getQuantidadeBlocosMaiorArquivo(Disco disco[], int quantidadeBlocosDisponivel, int &quantidadeUsou, int &quantidadeRealUtilizada)
+void obterQuantidadeBlocosPeloMaiorArquivo(Disco disco[], int quantidadeBlocosDisponivel, int &quantidadeUsou, int &quantidadeRealUtilizada)
 {
     int quantidadeBlocosUtilizados = 0;
     int i = 0;
@@ -671,7 +671,7 @@ void getQuantidadeBlocosMaiorArquivo(Disco disco[], int quantidadeBlocosDisponiv
     if(quantidadeUsou < quantidadeBlocosDisponivel)
     {
         quantidadeUsou++;
-        buscaMaiorArqInodeIndiretoSimples(disco, quantidadeBlocosDisponivel, quantidadeUsou, quantidadeRealUtilizada);
+        procurarMaiorArqInodeIndiretoSimples(disco, quantidadeBlocosDisponivel, quantidadeUsou, quantidadeRealUtilizada);
     }
   
    
@@ -679,7 +679,7 @@ void getQuantidadeBlocosMaiorArquivo(Disco disco[], int quantidadeBlocosDisponiv
    if(quantidadeUsou <quantidadeBlocosDisponivel)
     {
         quantidadeUsou++;
-        buscaMaiorArqInodeIndiretoDuplo(disco, quantidadeBlocosDisponivel, quantidadeUsou, quantidadeRealUtilizada);
+        procurarMaiorArqInodeIndiretoDuplo(disco, quantidadeBlocosDisponivel, quantidadeUsou, quantidadeRealUtilizada);
     }
     
     
@@ -687,13 +687,13 @@ void getQuantidadeBlocosMaiorArquivo(Disco disco[], int quantidadeBlocosDisponiv
     if(quantidadeUsou <quantidadeBlocosDisponivel)
     {
         quantidadeUsou++;
-        buscaMaiorArqInodeIndiretoTriplo(disco, quantidadeBlocosDisponivel, quantidadeUsou, quantidadeRealUtilizada);
+        procurarMaiorArqInodeIndiretoTriplo(disco, quantidadeBlocosDisponivel, quantidadeUsou, quantidadeRealUtilizada);
     }
     
     // quantidadeUsou++;
 }
 
-int getQuantidadeBlocosPerdidos(int quantidadeBlocosTotal){
+int obterQuantidadeBlocosPerdidos(int quantidadeBlocosTotal){
 
     int numeroBlocosPerdidos =  quantidadeBlocosTotal/QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE;;
     return numeroBlocosPerdidos * 10;
@@ -703,18 +703,18 @@ int getQuantidadeBlocosPerdidos(int quantidadeBlocosTotal){
 
 
 // utilizado para exibir o disco
-void percorrerInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, exibicaoEndereco enderecos[], int &TL, int ChamadoPeloTriplo = 0)
+void percorrerINodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, exibicaoEndereco enderecos[], int &tamanhoLista, int ChamadoPeloTriplo = 0)
 {
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
     {
-        if (!isEnderecoBad(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
+        if (!verificarSeEnderecoEstaDescalibrado(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
         {
-            if (disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].ls.caminho.length() > 0)
-                addExibicaoEndereco(enderecos, TL, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], 'L');
+            if (disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].ls.rota.length() > 0)
+                adicionarEnderecoNaExibicao(enderecos, tamanhoLista, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], 'detalhado');
             else
-                addExibicaoEndereco(enderecos, TL, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], 'A');
+                adicionarEnderecoNaExibicao(enderecos, tamanhoLista, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], 'A');
         }
 
         inicio++;
@@ -722,16 +722,16 @@ void percorrerInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, exi
 }
 
 // utilizado para exibir o disco
-void percorrerInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, exibicaoEndereco enderecos[], int &TL, int ChamadoPeloTriplo = 0)
+void percorrerINodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, exibicaoEndereco enderecos[], int &tamanhoLista, int ChamadoPeloTriplo = 0)
 {
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
     {
-        if (!isEnderecoBad(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
+        if (!verificarSeEnderecoEstaDescalibrado(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
         {
-            addExibicaoEndereco(enderecos, TL, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], 'I');
-            percorrerInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecos, TL, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
+            adicionarEnderecoNaExibicao(enderecos, tamanhoLista, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], 'I');
+            percorrerINodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecos, tamanhoLista, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
         }
 
         inicio++;
@@ -739,30 +739,30 @@ void percorrerInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, exibi
 }
 
 // utilizado para exibir o disco
-void percorrerInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, exibicaoEndereco enderecos[], int &TL)
+void percorrerINodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, exibicaoEndereco enderecos[], int &tamanhoLista)
 {
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
     {
-        if (!isEnderecoBad(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio])){
-            addExibicaoEndereco(enderecos, TL, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], 'I');
-            percorrerInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecos, TL, 1);
+        if (!verificarSeEnderecoEstaDescalibrado(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio])){
+            adicionarEnderecoNaExibicao(enderecos, tamanhoLista, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], 'I');
+            percorrerINodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecos, tamanhoLista, 1);
         }
 
         inicio++;
     }
 }
 
-void buscarLivresOcupadosInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int &qtdBlocosOcupados, int ChamadoPeloTriplo = 0)
+void procurarOcupacaoInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int &qtdBlocosOcupados, int ChamadoPeloTriplo = 0)
 {
 
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
         {
             qtdBlocosOcupados++;
             inicio++;
@@ -771,59 +771,59 @@ void buscarLivresOcupadosInodeIndiretoSimples(Disco disco[], int enderecoInodeIn
 }
 
 // utilizado para exibir o disco
-void buscarLivresOcupadosInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int &qtdBlocosOcupados, int ChamadoPeloTriplo = 0)
+void procurarOcupacaoInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int &qtdBlocosOcupados, int ChamadoPeloTriplo = 0)
 {
 
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
         {
             qtdBlocosOcupados++;
-            buscarLivresOcupadosInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], qtdBlocosOcupados, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
+            procurarOcupacaoInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], qtdBlocosOcupados, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
             inicio++;
         }
     }
 }
 
 // utilizado para exibir o disco
-void buscarLivresOcupadosInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, int &qtdBlocosOcupados)
+void procurarOcupacaoInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, int &qtdBlocosOcupados)
 {
 
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�oo esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½oo esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
         {
             qtdBlocosOcupados++;
-            buscarLivresOcupadosInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], qtdBlocosOcupados, 1);
+            procurarOcupacaoInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], qtdBlocosOcupados, 1);
             inicio++;
         }
     }
 }
 
-// utilizado para exibir os diret�rios do disco
-void listarDiretorioInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int &linha, char tipoListagem, bool exibeDiretorioOculto, int ChamadoPeloTriplo = 0)
+// utilizado para exibir os diretï¿½rios do disco
+void listarDiretorioINodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int &linha, char tipoListagem, bool exibeDiretorioOculto, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeArquivo;
     int i;
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
         {
 
             if (!tipoListagem)
             {
-                for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.TL; i++)
+                for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.tamanhoLista; i++)
                 {
-                    printf("%s\t", disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].nome);
+                    printf("%s\t", disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].nomenclatura);
                 }
 
                 if (linha == 10)
@@ -835,16 +835,16 @@ void listarDiretorioInodeIndiretoSimples(Disco disco[], int enderecoInodeIndiret
             else
             {
 
-                for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.TL; i++)
+                for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.tamanhoLista; i++)
                 {
-                    enderecoInodeArquivo = disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].enderecoINode;
-                    printf("%s ", disco[enderecoInodeArquivo].inode.protecao);
-                    printf("%d ", disco[enderecoInodeArquivo].inode.contadorLinkFisico);
-                    printf("%s ", getNomeProprietario(disco[enderecoInodeArquivo].inode.proprietario).c_str());
-                    printf("%s ", getNomeGrupo(disco[enderecoInodeArquivo].inode.grupo).c_str());
-                    printf("%d ", disco[enderecoInodeArquivo].inode.tamanhoArquivo);
-                    printf("%s ", disco[enderecoInodeArquivo].inode.dataUltimaAlteracao);
-                    printf("%s\n", disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].nome);
+                    enderecoInodeArquivo = disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].localizacaoINode;
+                    printf("%s ", disco[enderecoInodeArquivo].inode.seguranca);
+                    printf("%d ", disco[enderecoInodeArquivo].inode.quantidadeLinkFisico);
+                    printf("%s ", obterNomeProprietario(disco[enderecoInodeArquivo].inode.dono).c_str());
+                    printf("%s ", obterNomeGrupo(disco[enderecoInodeArquivo].inode.categoria).c_str());
+                    printf("%d ", disco[enderecoInodeArquivo].inode.dimensaoArquivo);
+                    printf("%s ", disco[enderecoInodeArquivo].inode.momentoUltimaAlteracao);
+                    printf("%s\n", disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].nomenclatura);
                 }
             }
 
@@ -853,42 +853,42 @@ void listarDiretorioInodeIndiretoSimples(Disco disco[], int enderecoInodeIndiret
     }
 }
 
-// utilizado para exibir os diret�rios do disco
-void listarDiretorioInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int &linha, char tipoListagem, bool exibeDiretorioOculto, int ChamadoPeloTriplo = 0)
+// utilizado para exibir os diretï¿½rios do disco
+void listarDiretorioINodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int &linha, char tipoListagem, bool exibeDiretorioOculto, int ChamadoPeloTriplo = 0)
 {
 
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
         {
-            listarDiretorioInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], linha, tipoListagem, exibeDiretorioOculto, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
+            listarDiretorioINodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], linha, tipoListagem, exibeDiretorioOculto, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
             inicio++;
         }
     }
 }
 
-// utilizado para exibir os diret�rios do disco
-void listarDiretorioInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, int &linha, char tipoListagem, bool exibeDiretorioOculto, int ChamadoPeloTriplo = 0)
+// utilizado para exibir os diretï¿½rios do disco
+void listarDiretorioINodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, int &linha, char tipoListagem, bool exibeDiretorioOculto, int ChamadoPeloTriplo = 0)
 {
 
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
         {
-            listarDiretorioInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], linha, tipoListagem, exibeDiretorioOculto, 1);
+            listarDiretorioINodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], linha, tipoListagem, exibeDiretorioOculto, 1);
             inicio++;
         }
     }
 }
 
-// utilizado para exibir os diret�rios do disco
-int verificaExistenciaArquivoOuDiretorioInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, char tipoArquivo, string nomeArquivo, int ChamadoPeloTriplo = 0)
+// utilizado para exibir os diretï¿½rios do disco
+int verificarExistenciaArquivoOuDiretorioInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, char tipoArquivo, string nomeArquivo, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeArquivo;
     int i;
@@ -896,14 +896,14 @@ int verificaExistenciaArquivoOuDiretorioInodeIndiretoSimples(Disco disco[], int 
 
     if (tipoArquivo == ' ')
     {
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
         {
-            for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.TL; i++)
+            for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.tamanhoLista; i++)
             {
-                if (strcmp(disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].nome, nomeArquivo.c_str()) == 0)
+                if (strcmp(disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].nomenclatura, nomeArquivo.c_str()) == 0)
                 {
-                    return disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].enderecoINode;
+                    return disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].localizacaoINode;
                 }
             }
 
@@ -912,16 +912,16 @@ int verificaExistenciaArquivoOuDiretorioInodeIndiretoSimples(Disco disco[], int 
     }
     else
     {
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
         {
-            for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.TL; i++)
+            for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.tamanhoLista; i++)
             {
-                if (disco[disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].enderecoINode].inode.protecao[0] == tipoArquivo)
+                if (disco[disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].localizacaoINode].inode.seguranca[0] == tipoArquivo)
                 {
-                    if (strcmp(disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].nome, nomeArquivo.c_str()) == 0)
+                    if (strcmp(disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].nomenclatura, nomeArquivo.c_str()) == 0)
                     {
-                        return disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].enderecoINode;
+                        return disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].localizacaoINode;
                     }
                 }
             }
@@ -930,56 +930,56 @@ int verificaExistenciaArquivoOuDiretorioInodeIndiretoSimples(Disco disco[], int 
         }
     }
 
-    return getEnderecoNull();
+    return obterEnderecoInvalido();
 }
 
-// utilizado para exibir os diret�rios do disco
-int verificaExistenciaArquivoOuDiretorioInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, char tipoArquivo, string nomeArquivo, int ChamadoPeloTriplo = 0)
+// utilizado para exibir os diretï¿½rios do disco
+int verificarExistenciaArquivoOuDiretorioInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, char tipoArquivo, string nomeArquivo, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeDir;
 
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
         {
-            enderecoInodeDir = verificaExistenciaArquivoOuDiretorioInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], tipoArquivo, nomeArquivo, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
-            if (isEnderecoValido(enderecoInodeDir))
+            enderecoInodeDir = verificarExistenciaArquivoOuDiretorioInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], tipoArquivo, nomeArquivo, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
+            if (verificarSeEnderecoEhValido(enderecoInodeDir))
                 return enderecoInodeDir;
 
             inicio++;
         }
     }
 
-    return getEnderecoNull();
+    return obterEnderecoInvalido();
 }
 
-// utilizado para exibir os diret�rios do disco
-int verificaExistenciaArquivoOuDiretorioInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, char tipoArquivo, string nomeArquivo, int ChamadoPeloTriplo = 0)
+// utilizado para exibir os diretï¿½rios do disco
+int verificarExistenciaArquivoOuDiretorioInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, char tipoArquivo, string nomeArquivo, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeDir;
 
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
         {
-            enderecoInodeDir = verificaExistenciaArquivoOuDiretorioInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], tipoArquivo, nomeArquivo, 1);
-            if (isEnderecoValido(enderecoInodeDir))
+            enderecoInodeDir = verificarExistenciaArquivoOuDiretorioInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], tipoArquivo, nomeArquivo, 1);
+            if (verificarSeEnderecoEhValido(enderecoInodeDir))
                 return enderecoInodeDir;
 
             inicio++;
         }
     }
 
-    return getEnderecoNull();
+    return obterEnderecoInvalido();
 }
 
-int buscaEnderecoEntradaDiretorioArquivoInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, char tipoArquivo, string nomeArquivo, int ChamadoPeloTriplo = 0)
+int procurarEnderecoEntradaDiretorioArquivoInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, char tipoArquivo, string nomeArquivo, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeArquivo;
     int i;
@@ -987,12 +987,12 @@ int buscaEnderecoEntradaDiretorioArquivoInodeIndiretoSimples(Disco disco[], int 
 
     if (tipoArquivo == ' ')
     {
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
         {
-            for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.TL; i++)
+            for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.tamanhoLista; i++)
             {
-                if (strcmp(disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].nome, nomeArquivo.c_str()) == 0)
+                if (strcmp(disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].nomenclatura, nomeArquivo.c_str()) == 0)
                 {
                     return disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio];
                 }
@@ -1002,14 +1002,14 @@ int buscaEnderecoEntradaDiretorioArquivoInodeIndiretoSimples(Disco disco[], int 
     }
     else
     {
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
         {
-            for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.TL; i++)
+            for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.tamanhoLista; i++)
             {
-                if (disco[disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].enderecoINode].inode.protecao[0] == tipoArquivo)
+                if (disco[disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].localizacaoINode].inode.seguranca[0] == tipoArquivo)
                 {
-                    if (strcmp(disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].nome, nomeArquivo.c_str()) == 0)
+                    if (strcmp(disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].nomenclatura, nomeArquivo.c_str()) == 0)
                     {
                         return disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio];
                     }
@@ -1019,117 +1019,117 @@ int buscaEnderecoEntradaDiretorioArquivoInodeIndiretoSimples(Disco disco[], int 
         }
     }
 
-    //TODO - CHAMAR INODE AUXILIAR SE N�O ENCONTRAR
-    return getEnderecoNull();
+    //TODO - CHAMAR INODE AUXILIAR SE Nï¿½O ENCONTRAR
+    return obterEnderecoInvalido();
 }
 
-// utilizado para exibir os diret�rios do disco
-int buscaEnderecoEntradaDiretorioArquivoInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, char tipoArquivo, string nomeArquivo, int ChamadoPeloTriplo = 0)
+// utilizado para exibir os diretï¿½rios do disco
+int procurarEnderecoEntradaDiretorioArquivoInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, char tipoArquivo, string nomeArquivo, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeDir;
 
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
         {
-            enderecoInodeDir = buscaEnderecoEntradaDiretorioArquivoInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], tipoArquivo, nomeArquivo, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
-            if (isEnderecoValido(enderecoInodeDir))
+            enderecoInodeDir = procurarEnderecoEntradaDiretorioArquivoInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], tipoArquivo, nomeArquivo, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
+            if (verificarSeEnderecoEhValido(enderecoInodeDir))
                 return enderecoInodeDir;
 
             inicio++;
         }
     }
 
-    return getEnderecoNull();
+    return obterEnderecoInvalido();
 }
-// utilizado para exibir os diret�rios do disco
-int buscaEnderecoEntradaDiretorioArquivoInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, char tipoArquivo, string nomeArquivo, int ChamadoPeloTriplo = 0)
+// utilizado para exibir os diretï¿½rios do disco
+int procurarEnderecoEntradaDiretorioArquivoInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, char tipoArquivo, string nomeArquivo, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeDir;
 
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
         {
-            enderecoInodeDir = buscaEnderecoEntradaDiretorioArquivoInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], tipoArquivo, nomeArquivo, 1);
-            if (isEnderecoValido(enderecoInodeDir))
+            enderecoInodeDir = procurarEnderecoEntradaDiretorioArquivoInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], tipoArquivo, nomeArquivo, 1);
+            if (verificarSeEnderecoEhValido(enderecoInodeDir))
                 return enderecoInodeDir;
 
             inicio++;
         }
     }
 
-    return getEnderecoNull();
+    return obterEnderecoInvalido();
 }
 
-// utilizado para reservar novo bloco do diret�rio ap�s cria��o do inode
-int buscaNovoBlocoDiretorioLivreEmIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int enderecoInodeDiretorioAtual, int InseridoPeloTriplo = 0)
+// utilizado para reservar novo bloco do diretï¿½rio apï¿½s criaï¿½ï¿½o do inode
+int procurarNovoBlocoDiretorioLivreEmIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int enderecoInodeDiretorioAtual, int InseridoPeloTriplo = 0)
 {
     bool consegueInserir = false;
     int i;
 
     int endereco = disco[enderecoInodeIndireto].inodeIndireto.endereco[0];
 
-    for (i = 0; i < MAX_INODEINDIRETO && isEnderecoValido(endereco) && !consegueInserir; i++)
+    for (i = 0; i < MAX_INODEINDIRETO && verificarSeEnderecoEhValido(endereco) && !consegueInserir; i++)
     {
         endereco = disco[enderecoInodeIndireto].inodeIndireto.endereco[i];
 
-        if (!isEnderecoNull(endereco) && disco[endereco].diretorio.TL < 10)
+        if (!verificarSeEnderecoEhInvalido(endereco) && disco[endereco].diretorio.tamanhoLista < 10)
         {
             consegueInserir = true;
         }
     }
 
-    // signfica que n�o conseguiu inserir e n�o percorreu todas as fun��es, senso assim, a pr�xima posi��o � -1, ent�o deve ser criado um novo diret�rio
-    if (!consegueInserir && i <= MAX_INODEINDIRETO && isEnderecoNull(endereco))
+    // signfica que nï¿½o conseguiu inserir e nï¿½o percorreu todas as funï¿½ï¿½es, senso assim, a prï¿½xima posiï¿½ï¿½o ï¿½ -1, entï¿½o deve ser criado um novo diretï¿½rio
+    if (!consegueInserir && i <= MAX_INODEINDIRETO && verificarSeEnderecoEhInvalido(endereco))
     {
-        endereco = popListaBlocoLivre(disco);
+        endereco = removerBlocoLivreDaLista(disco);
         disco[enderecoInodeIndireto].inodeIndireto.endereco[i - (i == 0 ? 0 : 1)] = endereco;
-        disco[enderecoInodeIndireto].inodeIndireto.TL++;
-        disco[disco[disco[enderecoInodeDiretorioAtual].inode.enderecoDireto[0]].diretorio.arquivo[0].enderecoINode].inode.tamanhoArquivo++;
+        disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista++;
+        disco[disco[disco[enderecoInodeDiretorioAtual].inode.enderecoDireto[0]].diretorio.arquivo[0].localizacaoINode].inode.dimensaoArquivo++;
     }
-    else if (!consegueInserir) // chegou ao �ltimo endere�o e mesmo assim n�o conseguiu inserir
+    else if (!consegueInserir) // chegou ao ï¿½ltimo endereï¿½o e mesmo assim nï¿½o conseguiu inserir
     {
-        return getEnderecoNull();
+        return obterEnderecoInvalido();
     }
 
-    // TODO - VERIFICAR SE est� SENDO PERCORRIDO PELO TRIPLO, E SE O �ltimo endere�o INDIRETO � OQ SOBROU, SENDO ASSIM, DEVE SE CRIAR UM INODE EXTRA
+    // TODO - VERIFICAR SE estï¿½ SENDO PERCORRIDO PELO TRIPLO, E SE O ï¿½ltimo endereï¿½o INDIRETO ï¿½ OQ SOBROU, SENDO ASSIM, DEVE SE CRIAR UM INODE EXTRA
     return endereco;
 }
 
-// utilizado para reservar novo bloco do diret�rio ap�s cria��o do inode
-int buscaNovoBlocoDiretorioLivreEmIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int enderecoInodeDiretorioAtual, int InseridoPeloTriplo = 0)
+// utilizado para reservar novo bloco do diretï¿½rio apï¿½s criaï¿½ï¿½o do inode
+int procurarNovoBlocoDiretorioLivreEmIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int enderecoInodeDiretorioAtual, int InseridoPeloTriplo = 0)
 {
     bool conseguiuInserir = false;
-    int endereco = getEnderecoNull();
+    int endereco = obterEnderecoInvalido();
 
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
     int inicio = 0;
     while (inicio < MAX_INODEINDIRETO && !conseguiuInserir)
     {
-        if (!isEnderecoNull(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
+        if (!verificarSeEnderecoEhInvalido(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
         {
-            endereco = buscaNovoBlocoDiretorioLivreEmIndiretoSimples(disco,
+            endereco = procurarNovoBlocoDiretorioLivreEmIndiretoSimples(disco,
                                                                      disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio],
                                                                      InseridoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
-            if (isEnderecoValido(endereco))
+            if (verificarSeEnderecoEhValido(endereco))
                 conseguiuInserir = true;
         }
 
-        if (isEnderecoNull(endereco) && isEnderecoNull(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
+        if (verificarSeEnderecoEhInvalido(endereco) && verificarSeEnderecoEhInvalido(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
         {
-            if (disco[enderecoInodeIndireto].inodeIndireto.TL < MAX_INODEINDIRETO)
+            if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista < MAX_INODEINDIRETO)
             {
-                disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio] = criarINodeIndireto(disco);
-                disco[enderecoInodeIndireto].inodeIndireto.TL++;
-                disco[disco[disco[enderecoInodeDiretorioAtual].inode.enderecoDireto[0]].diretorio.arquivo[0].enderecoINode].inode.tamanhoArquivo++;
-                endereco = buscaNovoBlocoDiretorioLivreEmIndiretoSimples(disco,
+                disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio] = construirINodeIndireto(disco);
+                disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista++;
+                disco[disco[disco[enderecoInodeDiretorioAtual].inode.enderecoDireto[0]].diretorio.arquivo[0].localizacaoINode].inode.dimensaoArquivo++;
+                endereco = procurarNovoBlocoDiretorioLivreEmIndiretoSimples(disco,
                                                                          disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio],
                                                                          InseridoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
                 conseguiuInserir = true;
@@ -1144,35 +1144,35 @@ int buscaNovoBlocoDiretorioLivreEmIndiretoDuplo(Disco disco[], int enderecoInode
     if (conseguiuInserir)
         return endereco;
 
-    return getEnderecoNull();
+    return obterEnderecoInvalido();
 }
 
-// utilizado para reservar novo bloco ap�s cria��o do inode
-int buscaNovoBlocoDiretorioLivreEmIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, int enderecoInodeDiretorioAtual)
+// utilizado para reservar novo bloco apï¿½s criaï¿½ï¿½o do inode
+int procurarNovoBlocoDiretorioLivreEmIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, int enderecoInodeDiretorioAtual)
 {
     bool conseguiuInserir = false;
-    int endereco = getEnderecoNull();
+    int endereco = obterEnderecoInvalido();
 
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
     int inicio = 0;
     while (inicio < MAX_INODEINDIRETO && !conseguiuInserir)
     {
-        if (!isEnderecoNull(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
+        if (!verificarSeEnderecoEhInvalido(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
         {
-            endereco = buscaNovoBlocoDiretorioLivreEmIndiretoDuplo(disco,
+            endereco = procurarNovoBlocoDiretorioLivreEmIndiretoDuplo(disco,
                                                                    disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], 1);
-            if (isEnderecoValido(endereco))
+            if (verificarSeEnderecoEhValido(endereco))
                 conseguiuInserir = true;
         }
 
-        if (isEnderecoNull(endereco) && isEnderecoNull(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
+        if (verificarSeEnderecoEhInvalido(endereco) && verificarSeEnderecoEhInvalido(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]))
         {
-            if (disco[enderecoInodeIndireto].inodeIndireto.TL < MAX_INODEINDIRETO)
+            if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista < MAX_INODEINDIRETO)
             {
-                disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio] = criarINodeIndireto(disco);
-                disco[enderecoInodeIndireto].inodeIndireto.TL++;
-                disco[disco[disco[enderecoInodeDiretorioAtual].inode.enderecoDireto[0]].diretorio.arquivo[0].enderecoINode].inode.tamanhoArquivo++;
-                endereco = buscaNovoBlocoDiretorioLivreEmIndiretoDuplo(disco,
+                disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio] = construirINodeIndireto(disco);
+                disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista++;
+                disco[disco[disco[enderecoInodeDiretorioAtual].inode.enderecoDireto[0]].diretorio.arquivo[0].localizacaoINode].inode.dimensaoArquivo++;
+                endereco = procurarNovoBlocoDiretorioLivreEmIndiretoDuplo(disco,
                                                                        disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], 1);
                 conseguiuInserir = true;
             }
@@ -1186,16 +1186,16 @@ int buscaNovoBlocoDiretorioLivreEmIndiretoTriplo(Disco disco[], int enderecoInod
     if (conseguiuInserir)
         return endereco;
 
-    return getEnderecoNull();
+    return obterEnderecoInvalido();
 }
 
 // utilizado para exibir os blocos do arquivo
-void retornaEnderecosInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, string &enderecosUtilizados, int ChamadoPeloTriplo = 0)
+void retornarEnderecosINodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, string &enderecosUtilizados, int ChamadoPeloTriplo = 0)
 {
     char enderecoToChar[300];
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
     {
         itoa(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecoToChar, 10);
         enderecosUtilizados.append(enderecoToChar).append("-");
@@ -1205,187 +1205,187 @@ void retornaEnderecosInodeIndiretoSimples(Disco disco[], int enderecoInodeIndire
 
     if (ChamadoPeloTriplo)
     {
-        if (isEnderecoValido(disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1]))
+        if (verificarSeEnderecoEhValido(disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1]))
         {
             string nomeArq;
             nomeArq.assign("");
 
-            vi(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1], nomeArq, enderecosUtilizados);
+            abrirArquivoParaEdicao(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1], nomeArq, enderecosUtilizados);
         }
     }
 }
 
 // utilizado para exibir os blocos do arquivo
-void retornaEnderecosInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, string &enderecosUtilizados, int ChamadoPeloTriplo = 0)
+void retornarEnderecosINodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, string &enderecosUtilizados, int ChamadoPeloTriplo = 0)
 {
     char enderecoToChar[300];
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
     {
         itoa(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecoToChar, 10);
         enderecosUtilizados.append(enderecoToChar).append("-");
 
-        retornaEnderecosInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecosUtilizados, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
+        retornarEnderecosINodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecosUtilizados, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
         inicio++;
     }
 }
 
 // utilizado para exibir os blocos do arquivo
-void retornaEnderecosInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, string &enderecosUtilizados)
+void retornarEnderecosINodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, string &enderecosUtilizados)
 {
     char enderecoToChar[300];
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
     {
         itoa(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecoToChar, 10);
         enderecosUtilizados.append(enderecoToChar).append("-");
 
-        retornaEnderecosInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecosUtilizados, 1);
+        retornarEnderecosINodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecosUtilizados, 1);
         inicio++;
     }
 }
 
 // utilizado para remover os blocos do arquivo
-void removeEnderecosInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int ChamadoPeloTriplo = 0)
+void removerEnderecosINodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int ChamadoPeloTriplo = 0)
 {
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
     {
-        initDisco(disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]]);
-        pushListaBlocoLivre(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]);
-        disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio] = getEnderecoNull();
+        inicializarDisco(disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]]);
+        adicionarBlocoLivreNaLista(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]);
+        disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio] = obterEnderecoInvalido();
         inicio++;
     }
 
     if (ChamadoPeloTriplo)
     {
-        if (isEnderecoValido(disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1]))
+        if (verificarSeEnderecoEhValido(disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1]))
         {
             string nomeArq;
             nomeArq.assign("");
 
-            rm(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1], nomeArq, 0);
+            deletarArquivo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1], nomeArq, 0);
 
-            initDisco(disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1]]);
-            pushListaBlocoLivre(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1]);
-            disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1] = getEnderecoNull();
+            inicializarDisco(disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1]]);
+            adicionarBlocoLivreNaLista(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1]);
+            disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1] = obterEnderecoInvalido();
         }
     }
 }
 
 // utilizado para exibir os blocos do arquivo
-void removeEnderecosInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int ChamadoPeloTriplo = 0)
+void removerEnderecosINodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int ChamadoPeloTriplo = 0)
 {
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
     {
-        removeEnderecosInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
+        removerEnderecosINodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
 
-        initDisco(disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]]);
-        pushListaBlocoLivre(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]);
-        disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio] = getEnderecoNull();
+        inicializarDisco(disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]]);
+        adicionarBlocoLivreNaLista(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]);
+        disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio] = obterEnderecoInvalido();
         inicio++;
     }
 }
 
 // utilizado para exibir os blocos do arquivo
-void removeEnderecosInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto)
+void removerEnderecosINodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto)
 {
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
     {
-        removeEnderecosInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], 1);
+        removerEnderecosINodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], 1);
 
-        initDisco(disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]]);
-        pushListaBlocoLivre(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]);
+        inicializarDisco(disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]]);
+        adicionarBlocoLivreNaLista(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]);
 
-        disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio] = getEnderecoNull();
+        disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio] = obterEnderecoInvalido();
         inicio++;
     }
 }
 
-// utilizado para exibir os diret�rios do disco
-void retornaQuantidadeDiretorioInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int &contadorDiretorio, int ChamadoPeloTriplo = 0)
+// utilizado para exibir os diretï¿½rios do disco
+void retornarQuantidadeDiretorioINodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int &contadorDiretorio, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeArquivo;
     int i;
     int inicio = 0;
 
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
     {
-        contadorDiretorio += disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.TL;
+        contadorDiretorio += disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.tamanhoLista;
         inicio++;
     }
 
     if (ChamadoPeloTriplo)
     {
-        if (isEnderecoValido(disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1]))
+        if (verificarSeEnderecoEhValido(disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1]))
         {
             string nomeArq;
             nomeArq.assign("");
 
-            rmdir(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1], nomeArq, contadorDiretorio, 0);
+            deletarDiretorio(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1], nomeArq, contadorDiretorio, 0);
         }
     }
 }
 
-// utilizado para exibir os diret�rios do disco
-void retornaQuantidadeDiretorioInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int &contadorDiretorio, int ChamadoPeloTriplo = 0)
+// utilizado para exibir os diretï¿½rios do disco
+void retornarQuantidadeDiretorioINodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int &contadorDiretorio, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeDir;
 
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
         {
-            retornaQuantidadeDiretorioInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], contadorDiretorio, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
+            retornarQuantidadeDiretorioINodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], contadorDiretorio, ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
             inicio++;
         }
     }
 }
 
-// utilizado para exibir os diret�rios do disco
-void retornaQuantidadeDiretorioInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, int &contadorDiretorio, int ChamadoPeloTriplo = 0)
+// utilizado para exibir os diretï¿½rios do disco
+void retornarQuantidadeDiretorioINodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, int &contadorDiretorio, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeDir;
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
         {
-            retornaQuantidadeDiretorioInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], contadorDiretorio, 1);
+            retornarQuantidadeDiretorioINodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], contadorDiretorio, 1);
             inicio++;
         }
     }
 }
 
-int existeArquivoOuDiretorio(Disco disco[], int enderecoInodeAtual, string nomeArquivo, char tipoArquivo = ' ', bool igualTipoFornecido=true)
+int verificarExistenciaArquivoOuDiretorio(Disco disco[], int localizacaoINodeAtual, string nomeArquivo, char tipoArquivo = ' ', bool igualTipoFornecido=true)
 {
-    int direto, i, endereco = getEnderecoNull();
+    int direto, i, endereco = obterEnderecoInvalido();
 
     if (tipoArquivo == ' ')
     {
-        for (direto = 0; direto < 5 && isEnderecoValido(disco[enderecoInodeAtual].inode.enderecoDireto[direto]); direto++)
+        for (direto = 0; direto < 5 && verificarSeEnderecoEhValido(disco[localizacaoINodeAtual].inode.enderecoDireto[direto]); direto++)
         {
 
-            for (i = 0; i < disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.TL; i++)
+            for (i = 0; i < disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.tamanhoLista; i++)
             {
-                // printf("\n %s -- %s \n", disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nome,nomeDiretorio.c_str());
-                if (strcmp(disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nome, nomeArquivo.c_str()) == 0)
+                // printf("\n %s -- %s \n", disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nomenclatura,nomeDiretorio.c_str());
+                if (strcmp(disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nomenclatura, nomeArquivo.c_str()) == 0)
                 {
-                    return disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].enderecoINode;
+                    return disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].localizacaoINode;
                 }
             }
         }
@@ -1394,17 +1394,17 @@ int existeArquivoOuDiretorio(Disco disco[], int enderecoInodeAtual, string nomeA
     {
         if (igualTipoFornecido)
         {
-            for (direto = 0; direto < 5 && isEnderecoValido(disco[enderecoInodeAtual].inode.enderecoDireto[direto]); direto++)
+            for (direto = 0; direto < 5 && verificarSeEnderecoEhValido(disco[localizacaoINodeAtual].inode.enderecoDireto[direto]); direto++)
             {
 
-                for (i = 0; i < disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.TL; i++)
+                for (i = 0; i < disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.tamanhoLista; i++)
                 {
-                    if (disco[disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].enderecoINode].inode.protecao[0] == tipoArquivo)
+                    if (disco[disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].localizacaoINode].inode.seguranca[0] == tipoArquivo)
                     {
-                        // printf("\n %s -- %s \n", disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nome,nomeDiretorio.c_str());
-                        if (strcmp(disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nome, nomeArquivo.c_str()) == 0)
+                        // printf("\n %s -- %s \n", disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nomenclatura,nomeDiretorio.c_str());
+                        if (strcmp(disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nomenclatura, nomeArquivo.c_str()) == 0)
                         {
-                            return disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].enderecoINode;
+                            return disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].localizacaoINode;
                         }
                     }
                 }
@@ -1412,17 +1412,17 @@ int existeArquivoOuDiretorio(Disco disco[], int enderecoInodeAtual, string nomeA
         }
         else
         {
-            for (direto = 0; direto < 5 && isEnderecoValido(disco[enderecoInodeAtual].inode.enderecoDireto[direto]); direto++)
+            for (direto = 0; direto < 5 && verificarSeEnderecoEhValido(disco[localizacaoINodeAtual].inode.enderecoDireto[direto]); direto++)
             {
 
-                for (i = 0; i < disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.TL; i++)
+                for (i = 0; i < disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.tamanhoLista; i++)
                 {
-                    if (disco[disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].enderecoINode].inode.protecao[0] != tipoArquivo)
+                    if (disco[disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].localizacaoINode].inode.seguranca[0] != tipoArquivo)
                     {
-                        // printf("\n %s -- %s \n", disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nome,nomeDiretorio.c_str());
-                        if (strcmp(disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nome, nomeArquivo.c_str()) == 0)
+                        // printf("\n %s -- %s \n", disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nomenclatura,nomeDiretorio.c_str());
+                        if (strcmp(disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nomenclatura, nomeArquivo.c_str()) == 0)
                         {
-                            return disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].enderecoINode;
+                            return disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].localizacaoINode;
                         }
                     }
                 }
@@ -1430,32 +1430,32 @@ int existeArquivoOuDiretorio(Disco disco[], int enderecoInodeAtual, string nomeA
         }
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoSimplesIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoSimplesIndireto))
     {
-        endereco = verificaExistenciaArquivoOuDiretorioInodeIndiretoSimples(disco, disco[enderecoInodeAtual].inode.enderecoSimplesIndireto, tipoArquivo, nomeArquivo);
+        endereco = verificarExistenciaArquivoOuDiretorioInodeIndiretoSimples(disco, disco[localizacaoINodeAtual].inode.enderecoSimplesIndireto, tipoArquivo, nomeArquivo);
     }
 
-    if (isEnderecoValido(endereco))
-    {
-        return endereco;
-    }
-
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoDuploIndireto))
-    {
-        endereco = verificaExistenciaArquivoOuDiretorioInodeIndiretoDuplo(disco, disco[enderecoInodeAtual].inode.enderecoDuploIndireto, tipoArquivo, nomeArquivo);
-    }
-
-    if (isEnderecoValido(endereco))
+    if (verificarSeEnderecoEhValido(endereco))
     {
         return endereco;
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoTriploIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoDuploIndireto))
     {
-        endereco = verificaExistenciaArquivoOuDiretorioInodeIndiretoTriplo(disco, disco[enderecoInodeAtual].inode.enderecoTriploIndireto, tipoArquivo, nomeArquivo, 1);
+        endereco = verificarExistenciaArquivoOuDiretorioInodeIndiretoDuplo(disco, disco[localizacaoINodeAtual].inode.enderecoDuploIndireto, tipoArquivo, nomeArquivo);
     }
 
-    if (isEnderecoValido(endereco))
+    if (verificarSeEnderecoEhValido(endereco))
+    {
+        return endereco;
+    }
+
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoTriploIndireto))
+    {
+        endereco = verificarExistenciaArquivoOuDiretorioInodeIndiretoTriplo(disco, disco[localizacaoINodeAtual].inode.enderecoTriploIndireto, tipoArquivo, nomeArquivo, 1);
+    }
+
+    if (verificarSeEnderecoEhValido(endereco))
     {
         return endereco;
     }
@@ -1463,36 +1463,36 @@ int existeArquivoOuDiretorio(Disco disco[], int enderecoInodeAtual, string nomeA
     return endereco;
 }
 
-int buscaEnderecoEntradaDiretorioArquivo(Disco disco[], int enderecoInodeAtual, string nomeArquivo, char tipoArquivo=' ')
+int procurarEnderecoEntradaDiretorioArquivo(Disco disco[], int localizacaoINodeAtual, string nomeArquivo, char tipoArquivo=' ')
 {
-    int direto, i, endereco = getEnderecoNull();
+    int direto, i, endereco = obterEnderecoInvalido();
 
     if (tipoArquivo == ' ')
     {
-        for (direto = 0; direto < 5 && isEnderecoValido(disco[enderecoInodeAtual].inode.enderecoDireto[direto]); direto++)
+        for (direto = 0; direto < 5 && verificarSeEnderecoEhValido(disco[localizacaoINodeAtual].inode.enderecoDireto[direto]); direto++)
         {
-            for (i = 0; i < disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.TL; i++)
+            for (i = 0; i < disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.tamanhoLista; i++)
             {
-                // printf("\n %s -- %s \n", disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nome,nomeDiretorio.c_str());
-                if (strcmp(disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nome, nomeArquivo.c_str()) == 0)
+                // printf("\n %s -- %s \n", disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nomenclatura,nomeDiretorio.c_str());
+                if (strcmp(disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nomenclatura, nomeArquivo.c_str()) == 0)
                 {
-                    return disco[enderecoInodeAtual].inode.enderecoDireto[direto];
+                    return disco[localizacaoINodeAtual].inode.enderecoDireto[direto];
                 }
             }
         }
     }
     else
     {
-        for (direto = 0; direto < 5 && isEnderecoValido(disco[enderecoInodeAtual].inode.enderecoDireto[direto]); direto++)
+        for (direto = 0; direto < 5 && verificarSeEnderecoEhValido(disco[localizacaoINodeAtual].inode.enderecoDireto[direto]); direto++)
         {
-            for (i = 0; i < disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.TL; i++)
+            for (i = 0; i < disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.tamanhoLista; i++)
             {
-                if (disco[disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].enderecoINode].inode.protecao[0] == tipoArquivo)
+                if (disco[disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].localizacaoINode].inode.seguranca[0] == tipoArquivo)
                 {
-                    // printf("\n %s -- %s \n", disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nome,nomeDiretorio.c_str());
-                    if (strcmp(disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nome, nomeArquivo.c_str()) == 0)
+                    // printf("\n %s -- %s \n", disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nomenclatura,nomeDiretorio.c_str());
+                    if (strcmp(disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nomenclatura, nomeArquivo.c_str()) == 0)
                     {
-                        return disco[enderecoInodeAtual].inode.enderecoDireto[direto];
+                        return disco[localizacaoINodeAtual].inode.enderecoDireto[direto];
                     }
                 }
             }
@@ -1500,32 +1500,32 @@ int buscaEnderecoEntradaDiretorioArquivo(Disco disco[], int enderecoInodeAtual, 
     }
     
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoSimplesIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoSimplesIndireto))
     {
-        endereco = buscaEnderecoEntradaDiretorioArquivoInodeIndiretoSimples(disco, disco[enderecoInodeAtual].inode.enderecoSimplesIndireto, tipoArquivo, nomeArquivo);
+        endereco = procurarEnderecoEntradaDiretorioArquivoInodeIndiretoSimples(disco, disco[localizacaoINodeAtual].inode.enderecoSimplesIndireto, tipoArquivo, nomeArquivo);
     }
 
-    if (isEnderecoValido(endereco))
-    {
-        return endereco;
-    }
-
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoDuploIndireto))
-    {
-        endereco = buscaEnderecoEntradaDiretorioArquivoInodeIndiretoDuplo(disco, disco[enderecoInodeAtual].inode.enderecoDuploIndireto, tipoArquivo, nomeArquivo);
-    }
-
-    if (isEnderecoValido(endereco))
+    if (verificarSeEnderecoEhValido(endereco))
     {
         return endereco;
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoTriploIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoDuploIndireto))
     {
-        endereco = buscaEnderecoEntradaDiretorioArquivoInodeIndiretoTriplo(disco, disco[enderecoInodeAtual].inode.enderecoTriploIndireto, tipoArquivo, nomeArquivo, 1);
+        endereco = procurarEnderecoEntradaDiretorioArquivoInodeIndiretoDuplo(disco, disco[localizacaoINodeAtual].inode.enderecoDuploIndireto, tipoArquivo, nomeArquivo);
     }
 
-    if (isEnderecoValido(endereco))
+    if (verificarSeEnderecoEhValido(endereco))
+    {
+        return endereco;
+    }
+
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoTriploIndireto))
+    {
+        endereco = procurarEnderecoEntradaDiretorioArquivoInodeIndiretoTriplo(disco, disco[localizacaoINodeAtual].inode.enderecoTriploIndireto, tipoArquivo, nomeArquivo, 1);
+    }
+
+    if (verificarSeEnderecoEhValido(endereco))
     {
         return endereco;
     }
@@ -1533,51 +1533,51 @@ int buscaEnderecoEntradaDiretorioArquivo(Disco disco[], int enderecoInodeAtual, 
     return endereco;
 }
 
-int criarINode(Disco disco[], char tipoArquivo, char permissao[10], int tamanhoArquivo = 1, int enderecoInodePai = -1, string caminhoLink = "")
+int construirINode(Disco disco[], char tipoArquivo, char privilegio[10], int dimensaoArquivo = 1, int enderecoInodePai = -1, string caminhoLink = "")
 {
-    int quantidadeBlocosNecessarios = (int)ceil((double)tamanhoArquivo / (double)10);
+    int quantidadeBlocosNecessarios = (int)ceil((double)dimensaoArquivo / (double)10);
 
-    // quantidade de blocos necess�rias � maior que a quantidade de blocos livres. Se for, n�o posso gerar o arquivo, ent�o retorna "-1"
-    if (quantidadeBlocosNecessarios > getQuantidadeBlocosLivres(disco))
+    // quantidade de blocos necessï¿½rias ï¿½ maior que a quantidade de blocos livres. Se for, nï¿½o posso gerar o arquivo, entï¿½o retorna "-1"
+    if (quantidadeBlocosNecessarios > obterQuantidadeBlocosDisponveis(disco))
     {
-        return getEnderecoNull();
+        return obterEnderecoInvalido();
     }
 
-    int enderecoInode = popListaBlocoLivre(disco);
-    if (isEnderecoValido(enderecoInode))
+    int localizacaoINode = removerBlocoLivreDaLista(disco);
+    if (verificarSeEnderecoEhValido(localizacaoINode))
     {
         // inicializa bloco
         for (int i = 0; i < 5; i++)
         {
-            setEnderecoNull(disco[enderecoInode].inode.enderecoDireto[i]);
+            definirEnderecoInvalido(disco[localizacaoINode].inode.enderecoDireto[i]);
         }
-        setEnderecoNull(disco[enderecoInode].inode.enderecoSimplesIndireto);
-        setEnderecoNull(disco[enderecoInode].inode.enderecoDuploIndireto);
-        setEnderecoNull(disco[enderecoInode].inode.enderecoTriploIndireto);
+        definirEnderecoInvalido(disco[localizacaoINode].inode.enderecoSimplesIndireto);
+        definirEnderecoInvalido(disco[localizacaoINode].inode.enderecoDuploIndireto);
+        definirEnderecoInvalido(disco[localizacaoINode].inode.enderecoTriploIndireto);
 
-        disco[enderecoInode].inode.protecao[0] = tipoArquivo;
-        strncpy(disco[enderecoInode].inode.protecao + 1, permissao, 10);
+        disco[localizacaoINode].inode.seguranca[0] = tipoArquivo;
+        strncpy(disco[localizacaoINode].inode.seguranca + 1, privilegio, 10);
 
-        disco[enderecoInode].inode.contadorLinkFisico = 1;
-        disco[enderecoInode].inode.tamanhoArquivo = tamanhoArquivo;
+        disco[localizacaoINode].inode.quantidadeLinkFisico = 1;
+        disco[localizacaoINode].inode.dimensaoArquivo = dimensaoArquivo;
 
-        setDataHoraAtualSistema(disco[enderecoInode].inode.dataCriacao);
-        setDataHoraAtualSistema(disco[enderecoInode].inode.dataUltimaAlteracao);
-        setDataHoraAtualSistema(disco[enderecoInode].inode.dataUltimoAcesso);
+        definirDataHoraAtualSistema(disco[localizacaoINode].inode.momentoCriacao);
+        definirDataHoraAtualSistema(disco[localizacaoINode].inode.momentoUltimaAlteracao);
+        definirDataHoraAtualSistema(disco[localizacaoINode].inode.momentoUltimoAcesso);
 
-        // usu�rio root
-        disco[enderecoInode].inode.proprietario = 1000;
-        // grupo root
-        disco[enderecoInode].inode.grupo = 1000;
+        // usuï¿½rio root
+        disco[localizacaoINode].inode.dono = 1000;
+        // categoria root
+        disco[localizacaoINode].inode.categoria = 1000;
 
         int quantidadeBlocosUtilizados = 0;
 
         int i = 0;
         while (i < quantidadeBlocosNecessarios && i < 5)
         {
-            if (isEnderecoNull(disco[enderecoInode].inode.enderecoDireto[quantidadeBlocosUtilizados]))
+            if (verificarSeEnderecoEhInvalido(disco[localizacaoINode].inode.enderecoDireto[quantidadeBlocosUtilizados]))
             {
-                disco[enderecoInode].inode.enderecoDireto[quantidadeBlocosUtilizados] = popListaBlocoLivre(disco);
+                disco[localizacaoINode].inode.enderecoDireto[quantidadeBlocosUtilizados] = removerBlocoLivreDaLista(disco);
                 quantidadeBlocosUtilizados++;
             }
             i++;
@@ -1586,96 +1586,96 @@ int criarINode(Disco disco[], char tipoArquivo, char permissao[10], int tamanhoA
         int quantidadeBlocosFaltantes = quantidadeBlocosNecessarios - quantidadeBlocosUtilizados;
         if (quantidadeBlocosFaltantes > 0)
         {
-            if (isEnderecoNull(disco[enderecoInode].inode.enderecoSimplesIndireto))
+            if (verificarSeEnderecoEhInvalido(disco[localizacaoINode].inode.enderecoSimplesIndireto))
             {
-                disco[enderecoInode].inode.enderecoSimplesIndireto = criarINodeIndireto(disco);
+                disco[localizacaoINode].inode.enderecoSimplesIndireto = construirINodeIndireto(disco);
             }
-            inserirInodeIndiretoSimples(disco, disco[enderecoInode].inode.enderecoSimplesIndireto, enderecoInode, quantidadeBlocosFaltantes);
+            inserirINodeIndiretoSimples(disco, disco[localizacaoINode].inode.enderecoSimplesIndireto, localizacaoINode, quantidadeBlocosFaltantes);
         }
 
         if (quantidadeBlocosFaltantes > 0)
         {
-            if (isEnderecoNull(disco[enderecoInode].inode.enderecoDuploIndireto))
+            if (verificarSeEnderecoEhInvalido(disco[localizacaoINode].inode.enderecoDuploIndireto))
             {
-                disco[enderecoInode].inode.enderecoDuploIndireto = criarINodeIndireto(disco);
+                disco[localizacaoINode].inode.enderecoDuploIndireto = construirINodeIndireto(disco);
             }
-            inserirInodeIndiretoDuplo(disco, disco[enderecoInode].inode.enderecoDuploIndireto, enderecoInode, quantidadeBlocosFaltantes);
+            inserirINodeIndiretoDuplo(disco, disco[localizacaoINode].inode.enderecoDuploIndireto, localizacaoINode, quantidadeBlocosFaltantes);
         }
 
         if (quantidadeBlocosFaltantes > 0)
         {
-            if (isEnderecoNull(disco[enderecoInode].inode.enderecoTriploIndireto))
+            if (verificarSeEnderecoEhInvalido(disco[localizacaoINode].inode.enderecoTriploIndireto))
             {
-                disco[enderecoInode].inode.enderecoTriploIndireto = criarINodeIndireto(disco);
+                disco[localizacaoINode].inode.enderecoTriploIndireto = construirINodeIndireto(disco);
             }
-            inserirInodeIndiretoTriplo(disco, disco[enderecoInode].inode.enderecoTriploIndireto, enderecoInode, quantidadeBlocosFaltantes);
+            inserirINodeIndiretoTriplo(disco, disco[localizacaoINode].inode.enderecoTriploIndireto, localizacaoINode, quantidadeBlocosFaltantes);
         }
 
         if (tipoArquivo == TIPO_ARQUIVO_DIRETORIO)
         {
-            // caso o tipo de arquivo criado for diret�rio, � necess�rio criar dois diret�rios dentro dele, sendo:
-            //  "."(Aponta para o inode do diret�rio atual) e
-            //  ".."(Aponta para o inode do diret�rio anterior)
+            // caso o tipo de arquivo criado for diretï¿½rio, ï¿½ necessï¿½rio criar dois diretï¿½rios dentro dele, sendo:
+            //  "."(Aponta para o inode do diretï¿½rio atual) e
+            //  ".."(Aponta para o inode do diretï¿½rio anterior)
 
             // strcpy(nomeDiretorioAtual, ".");
             // strcpy(nomeDiretorioAnterior, "..");
 
-            // //cria��o do diret�rio "." - atual
-            // addArquivoNoDiretorio(disco, enderecoInode, enderecoInode, nomeDiretorioAtual);
+            // //criaï¿½ï¿½o do diretï¿½rio "." - atual
+            // adicionarArquivoNoDiretorio(disco, localizacaoINode, localizacaoINode, nomeDiretorioAtual);
 
-            // //criação do diret�rio ".." - pai
-            // addDiretorio(disco, enderecoInodeDiretorioAtual, enderecoInode, nomeDiretorioAnterior);
-            if (isEnderecoNull(enderecoInodePai))
-                enderecoInodePai = enderecoInode;
+            // //criaÃ§Ã£o do diretï¿½rio ".." - pai
+            // addDiretorio(disco, enderecoInodeDiretorioAtual, localizacaoINode, nomeDiretorioAnterior);
+            if (verificarSeEnderecoEhInvalido(enderecoInodePai))
+                enderecoInodePai = localizacaoINode;
 
             char nomeDir[MAX_NOME_ARQUIVO];
 
             strcpy(nomeDir, ".");
-            addArquivoNoDiretorio(disco, disco[enderecoInode].inode.enderecoDireto[0], enderecoInode, nomeDir);
+            adicionarArquivoNoDiretorio(disco, disco[localizacaoINode].inode.enderecoDireto[0], localizacaoINode, nomeDir);
 
             strcpy(nomeDir, "..");
-            addArquivoNoDiretorio(disco, disco[enderecoInode].inode.enderecoDireto[0], enderecoInodePai, nomeDir);
+            adicionarArquivoNoDiretorio(disco, disco[localizacaoINode].inode.enderecoDireto[0], enderecoInodePai, nomeDir);
         }
         else if (tipoArquivo == TIPO_ARQUIVO_LINK)
         {
-            disco[disco[enderecoInode].inode.enderecoDireto[0]].ls.caminho=caminhoLink;
+            disco[disco[localizacaoINode].inode.enderecoDireto[0]].ls.rota=caminhoLink;
         }
     }
 
-    // retorna endere�o do inode criado
-    return enderecoInode;
+    // retorna endereï¿½o do inode criado
+    return localizacaoINode;
 }
 
-char isDirFull(Diretorio diretorio)
+char verificarSeDiretorioEstaCheia(Diretorio diretorio)
 {
-    return diretorio.TL == DIRETORIO_LIMITE_ARQUIVOS;
+    return diretorio.tamanhoLista == DIRETORIO_LIMITE_ARQUIVOS;
 }
 
-// adiciona o arquivo dentro da entrada do diret�rio
-void addArquivoNoDiretorio(Disco disco[], int enderecoDiretorio, int enderecoInodeCriado, char nomeDiretorioArquivo[MAX_NOME_ARQUIVO])
+// adiciona o arquivo dentro da entrada do diretï¿½rio
+void adicionarArquivoNoDiretorio(Disco disco[], int enderecoDiretorio, int enderecoInodeCriado, char nomeDiretorioArquivo[MAX_NOME_ARQUIVO])
 {
 
-    disco[enderecoDiretorio].diretorio.arquivo[disco[enderecoDiretorio].diretorio.TL].enderecoINode = enderecoInodeCriado;
+    disco[enderecoDiretorio].diretorio.arquivo[disco[enderecoDiretorio].diretorio.tamanhoLista].localizacaoINode = enderecoInodeCriado;
 
-    strcpy(disco[enderecoDiretorio].diretorio.arquivo[disco[enderecoDiretorio].diretorio.TL++].nome, nomeDiretorioArquivo);
+    strcpy(disco[enderecoDiretorio].diretorio.arquivo[disco[enderecoDiretorio].diretorio.tamanhoLista++].nomenclatura, nomeDiretorioArquivo);
 }
 
-void removeArquivoNoDiretorio(Disco disco[], int enderecoEntradaDiretorio, int posicaoRemovida)
+void removerArquivoNoDiretorio(Disco disco[], int enderecoEntradaDiretorio, int posicaoRemovida)
 {
-    for (int i = posicaoRemovida; i < disco[enderecoEntradaDiretorio].diretorio.TL; i++)
+    for (int i = posicaoRemovida; i < disco[enderecoEntradaDiretorio].diretorio.tamanhoLista; i++)
     {
         disco[enderecoEntradaDiretorio].diretorio.arquivo[i] = disco[enderecoEntradaDiretorio].diretorio.arquivo[i + 1];
     }
 
-    disco[enderecoEntradaDiretorio].diretorio.TL--;
+    disco[enderecoEntradaDiretorio].diretorio.tamanhoLista--;
 }
 
-int buscaArquivoNoDiretorio(Disco disco[], int enderecoEntradaDiretorio, string nomeArquivo){
+int procurarArquivoNoDiretorio(Disco disco[], int enderecoEntradaDiretorio, string nomeArquivo){
     int pos=0;
 
-    while (pos < disco[enderecoEntradaDiretorio].diretorio.TL)
+    while (pos < disco[enderecoEntradaDiretorio].diretorio.tamanhoLista)
     {
-        if (strcmp(disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].nome, nomeArquivo.c_str()) == 0)
+        if (strcmp(disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].nomenclatura, nomeArquivo.c_str()) == 0)
             break;
         pos++;
     }
@@ -1683,113 +1683,113 @@ int buscaArquivoNoDiretorio(Disco disco[], int enderecoEntradaDiretorio, string 
     return pos;
 }
 
-// fun��o que busca qual o diret�rio que ser� poss�vel inserir o arquivo ou diret�rio
-int addDiretorioEArquivo(Disco disco[], char tipoArquivo, int enderecoInodeDiretorioAtual, char nomeDiretorioArquivoNovo[MAX_NOME_ARQUIVO], int tamanhoArquivo = 1, string caminhoLink="", int enderecoInodeCriado=getEnderecoNull())
+// funï¿½ï¿½o que busca qual o diretï¿½rio que serï¿½ possï¿½vel inserir o arquivo ou diretï¿½rio
+int inserirDiretorioEArquivo(Disco disco[], char tipoArquivo, int enderecoInodeDiretorioAtual, char nomeDiretorioArquivoNovo[MAX_NOME_ARQUIVO], int dimensaoArquivo = 1, string caminhoLink="", int enderecoInodeCriado=obterEnderecoInvalido())
 {
 
     bool consegueInserir = false;
     int i;
     int enderecoInodeDiretorio;
     int enderecoInodeArquivo;
-    char permissao[10];
+    char privilegio[10];
 
-    enderecoInodeArquivo = existeArquivoOuDiretorio(disco, enderecoInodeDiretorioAtual, nomeDiretorioArquivoNovo);
-    if (isEnderecoNull(enderecoInodeArquivo))
+    enderecoInodeArquivo = verificarExistenciaArquivoOuDiretorio(disco, enderecoInodeDiretorioAtual, nomeDiretorioArquivoNovo);
+    if (verificarSeEnderecoEhInvalido(enderecoInodeArquivo))
     {
         int enderecoDireto = disco[enderecoInodeDiretorioAtual].inode.enderecoDireto[0];
 
-        for (i = 0; i < 5 && isEnderecoValido(enderecoDireto) && !consegueInserir; i++)
+        for (i = 0; i < 5 && verificarSeEnderecoEhValido(enderecoDireto) && !consegueInserir; i++)
         {
             enderecoDireto = disco[enderecoInodeDiretorioAtual].inode.enderecoDireto[i];
 
-            if (isEnderecoValido(enderecoDireto) && disco[enderecoDireto].diretorio.TL < 10)
+            if (verificarSeEnderecoEhValido(enderecoDireto) && disco[enderecoDireto].diretorio.tamanhoLista < 10)
             {
                 consegueInserir = true;
             }
         }
 
-        // pergunta se n�o conseguiu inserir no diret�rio e finalizou o while antes mesmo de atingir todos os Endere�os.
-        if (!consegueInserir && i <= 5 && isEnderecoNull(enderecoDireto)) // significa que h� blocos livres para ser preenchidos e o diret�rio esta cheio.
+        // pergunta se nï¿½o conseguiu inserir no diretï¿½rio e finalizou o while antes mesmo de atingir todos os Endereï¿½os.
+        if (!consegueInserir && i <= 5 && verificarSeEnderecoEhInvalido(enderecoDireto)) // significa que hï¿½ blocos livres para ser preenchidos e o diretï¿½rio esta cheio.
         {
-            enderecoInodeDiretorio = popListaBlocoLivre(disco);
+            enderecoInodeDiretorio = removerBlocoLivreDaLista(disco);
             disco[enderecoInodeDiretorioAtual].inode.enderecoDireto[i - 1] = enderecoInodeDiretorio;
-            disco[disco[disco[enderecoInodeDiretorioAtual].inode.enderecoDireto[0]].diretorio.arquivo[0].enderecoINode].inode.tamanhoArquivo++;
+            disco[disco[disco[enderecoInodeDiretorioAtual].inode.enderecoDireto[0]].diretorio.arquivo[0].localizacaoINode].inode.dimensaoArquivo++;
         }
-        else if (!consegueInserir) // todos os blocos est�o cheio, consequentemente deve verificar se pode adicionar nos blocos indiretos
+        else if (!consegueInserir) // todos os blocos estï¿½o cheio, consequentemente deve verificar se pode adicionar nos blocos indiretos
         {
-            if (isEnderecoNull(disco[enderecoInodeDiretorioAtual].inode.enderecoSimplesIndireto))
+            if (verificarSeEnderecoEhInvalido(disco[enderecoInodeDiretorioAtual].inode.enderecoSimplesIndireto))
             {
-                disco[enderecoInodeDiretorioAtual].inode.enderecoSimplesIndireto = criarINodeIndireto(disco);
+                disco[enderecoInodeDiretorioAtual].inode.enderecoSimplesIndireto = construirINodeIndireto(disco);
             }
-            enderecoInodeDiretorio = buscaNovoBlocoDiretorioLivreEmIndiretoSimples(disco, disco[enderecoInodeDiretorioAtual].inode.enderecoSimplesIndireto, enderecoInodeDiretorioAtual);
+            enderecoInodeDiretorio = procurarNovoBlocoDiretorioLivreEmIndiretoSimples(disco, disco[enderecoInodeDiretorioAtual].inode.enderecoSimplesIndireto, enderecoInodeDiretorioAtual);
 
-            // n�o conseguiu buscar um bloco dispon�vel no inode indireto simples
-            if (isEnderecoNull(enderecoInodeDiretorio))
+            // nï¿½o conseguiu buscar um bloco disponï¿½vel no inode indireto simples
+            if (verificarSeEnderecoEhInvalido(enderecoInodeDiretorio))
             {
-                if (isEnderecoNull(disco[enderecoInodeDiretorioAtual].inode.enderecoDuploIndireto))
+                if (verificarSeEnderecoEhInvalido(disco[enderecoInodeDiretorioAtual].inode.enderecoDuploIndireto))
                 {
-                    disco[enderecoInodeDiretorioAtual].inode.enderecoDuploIndireto = criarINodeIndireto(disco);
+                    disco[enderecoInodeDiretorioAtual].inode.enderecoDuploIndireto = construirINodeIndireto(disco);
                 }
-                enderecoInodeDiretorio = buscaNovoBlocoDiretorioLivreEmIndiretoDuplo(disco, disco[enderecoInodeDiretorioAtual].inode.enderecoDuploIndireto, enderecoInodeDiretorioAtual);
+                enderecoInodeDiretorio = procurarNovoBlocoDiretorioLivreEmIndiretoDuplo(disco, disco[enderecoInodeDiretorioAtual].inode.enderecoDuploIndireto, enderecoInodeDiretorioAtual);
 
-                // n�o conseguiu buscar um bloco dispon�vel no inode indireto duplo
-                if (isEnderecoNull(enderecoInodeDiretorio))
+                // nï¿½o conseguiu buscar um bloco disponï¿½vel no inode indireto duplo
+                if (verificarSeEnderecoEhInvalido(enderecoInodeDiretorio))
                 {
-                    if (isEnderecoNull(disco[enderecoInodeDiretorioAtual].inode.enderecoTriploIndireto))
+                    if (verificarSeEnderecoEhInvalido(disco[enderecoInodeDiretorioAtual].inode.enderecoTriploIndireto))
                     {
-                        disco[enderecoInodeDiretorioAtual].inode.enderecoTriploIndireto = criarINodeIndireto(disco);
+                        disco[enderecoInodeDiretorioAtual].inode.enderecoTriploIndireto = construirINodeIndireto(disco);
                     }
 
-                    enderecoInodeDiretorio = buscaNovoBlocoDiretorioLivreEmIndiretoTriplo(disco, disco[enderecoInodeDiretorioAtual].inode.enderecoTriploIndireto, enderecoInodeDiretorioAtual);
+                    enderecoInodeDiretorio = procurarNovoBlocoDiretorioLivreEmIndiretoTriplo(disco, disco[enderecoInodeDiretorioAtual].inode.enderecoTriploIndireto, enderecoInodeDiretorioAtual);
                 }
             }
         }
-        else // identificou um bloco que pode ser utilizado para inserir o diret�rio
+        else // identificou um bloco que pode ser utilizado para inserir o diretï¿½rio
         {
             enderecoInodeDiretorio = enderecoDireto;
         }
-        // TODO - DESCOBRIR QUAL O BLOCO LIVRE PARA INSERIR O diret�rio NO diret�rio ATUAL
+        // TODO - DESCOBRIR QUAL O BLOCO LIVRE PARA INSERIR O diretï¿½rio NO diretï¿½rio ATUAL
 
         if (!enderecoInodeDiretorio)
-            return getEnderecoNull();
+            return obterEnderecoInvalido();
         else
         {
             if (tipoArquivo == TIPO_ARQUIVO_DIRETORIO)
             {
-                convertPermissaoUGOToString(PERMISSAO_PADRAO_DIRETORIO, permissao, 0);
+                converterPermissaoUGOParaTexto(PERMISSAO_PADRAO_DIRETORIO, privilegio, 0);
             }
             else if (tipoArquivo == TIPO_ARQUIVO_ARQUIVO)
             {
-                convertPermissaoUGOToString(PERMISSAO_PADRAO_ARQUIVO, permissao, 0);
+                converterPermissaoUGOParaTexto(PERMISSAO_PADRAO_ARQUIVO, privilegio, 0);
             }
             else if (tipoArquivo == TIPO_ARQUIVO_LINK)
             {
-                convertPermissaoUGOToString(PERMISSAO_PADRAO_LINKSIMBOLICO, permissao, 0);
+                converterPermissaoUGOParaTexto(PERMISSAO_PADRAO_LINKSIMBOLICO, privilegio, 0);
             }
 
-            // adiciona o arquivo dentro da entrada do diret�rio
-            if (isEnderecoNull(enderecoInodeCriado))
-                enderecoInodeCriado = criarINode(disco, tipoArquivo, permissao, tamanhoArquivo, enderecoInodeDiretorioAtual, caminhoLink);
+            // adiciona o arquivo dentro da entrada do diretï¿½rio
+            if (verificarSeEnderecoEhInvalido(enderecoInodeCriado))
+                enderecoInodeCriado = construirINode(disco, tipoArquivo, privilegio, dimensaoArquivo, enderecoInodeDiretorioAtual, caminhoLink);
 
-            addArquivoNoDiretorio(disco, enderecoInodeDiretorio, enderecoInodeCriado, nomeDiretorioArquivoNovo);
+            adicionarArquivoNoDiretorio(disco, enderecoInodeDiretorio, enderecoInodeCriado, nomeDiretorioArquivoNovo);
         }
         return enderecoInodeDiretorio;
     }
 
-    return getEnderecoNull();
+    return obterEnderecoInvalido();
 }
 
-int criaDiretorioRaiz(Disco disco[])
+int construirDiretorioRaiz(Disco disco[])
 {
-    char permissao[10];
+    char privilegio[10];
     char nomeArquivo[MAX_NOME_ARQUIVO];
 
-    convertPermissaoUGOToString(PERMISSAO_PADRAO_DIRETORIO, permissao, 0);
-    int enderecoInodeDiretorioRaiz = criarINode(disco, TIPO_ARQUIVO_DIRETORIO, permissao);
+    converterPermissaoUGOParaTexto(PERMISSAO_PADRAO_DIRETORIO, privilegio, 0);
+    int enderecoInodeDiretorioRaiz = construirINode(disco, TIPO_ARQUIVO_DIRETORIO, privilegio);
     return enderecoInodeDiretorioRaiz;
 }
 
-void quickSort(int ini, int fim, exibicaoEndereco vet[])
+void ordenarRapidamente(int ini, int fim, exibicaoEndereco vet[])
 {
     int i = ini;
     int j = fim;
@@ -1824,103 +1824,103 @@ void quickSort(int ini, int fim, exibicaoEndereco vet[])
     }
 
     if (ini < i - 1)
-        quickSort(ini, i - 1, vet);
+        ordenarRapidamente(ini, i - 1, vet);
 
     if (j + 1 < fim)
-        quickSort(j + 1, fim, vet);
+        ordenarRapidamente(j + 1, fim, vet);
 }
 
-void exibirDisco(Disco disco[], int tamanhoDisco, int quantidadeBlocosNecessariosListaLivre)
+void mostrarDisco(Disco disco[], int tamanhoDisco, int quantidadeBlocosNecessariosListaLivre)
 {
     exibicaoEndereco enderecos[tamanhoDisco];
     int TLEnderecos = 0;
     char nomeBlocos[5];
     int quantidadeCasasTamanhoDisco = (int)trunc(log10(tamanhoDisco)) + 1;
-    int quantidadeBlocosLivres = getQuantidadeBlocosLivres(disco);
+    int quantidadeBlocosLivres = obterQuantidadeBlocosDisponveis(disco);
 
     int linha = 0;
     for (int i = 0; i < tamanhoDisco; i++)
     {
         if (disco[i].bad)
         {
-            addExibicaoEndereco(enderecos, TLEnderecos, i, 'B');
+            adicionarEnderecoNaExibicao(enderecos, TLEnderecos, i, 'B');
         }
-        // else if(disco[i].diretorio.TL > 0){
-        //     addExibicaoEndereco(enderecos, TLEnderecos, i, 'A');
+        // else if(disco[i].diretorio.tamanhoLista > 0){
+        //     adicionarEnderecoNaExibicao(enderecos, TLEnderecos, i, 'A');
         // }
-        else if (strlen(disco[i].inode.protecao) > 0)
+        else if (strlen(disco[i].inode.seguranca) > 0)
         {
             // printf("%d - inode\n", i);
             // tem um i-node 
-            addExibicaoEndereco(enderecos, TLEnderecos, i, 'I');
-            for (int j = 0; j < 5 && !isEnderecoNull(disco[i].inode.enderecoDireto[j]); j++)
+            adicionarEnderecoNaExibicao(enderecos, TLEnderecos, i, 'I');
+            for (int j = 0; j < 5 && !verificarSeEnderecoEhInvalido(disco[i].inode.enderecoDireto[j]); j++)
             {
                 // printf("%d - arquivo\n", disco[i].inode.enderecoDireto[j]);
-                if (!isEnderecoNull(disco[i].inode.enderecoDireto[j]) && !isEnderecoBad(disco, disco[i].inode.enderecoDireto[j]))
+                if (!verificarSeEnderecoEhInvalido(disco[i].inode.enderecoDireto[j]) && !verificarSeEnderecoEstaDescalibrado(disco, disco[i].inode.enderecoDireto[j]))
                 {
-                    if (disco[disco[i].inode.enderecoDireto[j]].ls.caminho.length() > 0)
-                        addExibicaoEndereco(enderecos, TLEnderecos, disco[i].inode.enderecoDireto[j], 'L');
+                    if (disco[disco[i].inode.enderecoDireto[j]].ls.rota.length() > 0)
+                        adicionarEnderecoNaExibicao(enderecos, TLEnderecos, disco[i].inode.enderecoDireto[j], 'detalhado');
                     else
-                        addExibicaoEndereco(enderecos, TLEnderecos, disco[i].inode.enderecoDireto[j], 'A');
+                        adicionarEnderecoNaExibicao(enderecos, TLEnderecos, disco[i].inode.enderecoDireto[j], 'A');
                 }
             }
             
             
 
-            if (!isEnderecoNull(disco[i].inode.enderecoSimplesIndireto) && !isEnderecoBad(disco, disco[i].inode.enderecoSimplesIndireto))
+            if (!verificarSeEnderecoEhInvalido(disco[i].inode.enderecoSimplesIndireto) && !verificarSeEnderecoEstaDescalibrado(disco, disco[i].inode.enderecoSimplesIndireto))
             {
                 int enderecoIndireto = 0;
                 enderecoIndireto = disco[i].inode.enderecoSimplesIndireto;
-                addExibicaoEndereco(enderecos, TLEnderecos, enderecoIndireto, 'I');
+                adicionarEnderecoNaExibicao(enderecos, TLEnderecos, enderecoIndireto, 'I');
 
-                percorrerInodeIndiretoSimples(disco, enderecoIndireto, enderecos, TLEnderecos);
+                percorrerINodeIndiretoSimples(disco, enderecoIndireto, enderecos, TLEnderecos);
             }
 
-            if (!isEnderecoNull(disco[i].inode.enderecoDuploIndireto) && !isEnderecoBad(disco, disco[i].inode.enderecoDuploIndireto))
+            if (!verificarSeEnderecoEhInvalido(disco[i].inode.enderecoDuploIndireto) && !verificarSeEnderecoEstaDescalibrado(disco, disco[i].inode.enderecoDuploIndireto))
             {
                 int enderecoIndireto = disco[i].inode.enderecoDuploIndireto;
-                addExibicaoEndereco(enderecos, TLEnderecos, enderecoIndireto, 'I');
+                adicionarEnderecoNaExibicao(enderecos, TLEnderecos, enderecoIndireto, 'I');
 
-                percorrerInodeIndiretoDuplo(disco, enderecoIndireto, enderecos, TLEnderecos);
+                percorrerINodeIndiretoDuplo(disco, enderecoIndireto, enderecos, TLEnderecos);
             }
 
-            if (!isEnderecoNull(disco[i].inode.enderecoTriploIndireto) && !isEnderecoBad(disco, disco[i].inode.enderecoTriploIndireto))
+            if (!verificarSeEnderecoEhInvalido(disco[i].inode.enderecoTriploIndireto) && !verificarSeEnderecoEstaDescalibrado(disco, disco[i].inode.enderecoTriploIndireto))
             {
                 int enderecoIndireto = disco[i].inode.enderecoTriploIndireto;
-                addExibicaoEndereco(enderecos, TLEnderecos, enderecoIndireto, 'I');
+                adicionarEnderecoNaExibicao(enderecos, TLEnderecos, enderecoIndireto, 'I');
 
-                percorrerInodeIndiretoTriplo(disco, enderecoIndireto, enderecos, TLEnderecos);
+                percorrerINodeIndiretoTriplo(disco, enderecoIndireto, enderecos, TLEnderecos);
             }
         }
-        // else if(disco[i].inodeIndireto.TL > 0)
+        // else if(disco[i].inodeIndireto.tamanhoLista > 0)
         // {
-        //     //ignora o indireto, ser� realizado no inode
+        //     //ignora o indireto, serï¿½ realizado no inode
         // }
-        // else if (strlen(disco[i].ls.caminho.c_str()) > 0)
+        // else if (strlen(disco[i].ls.rota.c_str()) > 0)
         // {
-        //     addExibicaoEndereco(enderecos, TLEnderecos, i, 'L');
+        //     adicionarEnderecoNaExibicao(enderecos, TLEnderecos, i, 'detalhado');
         // }
-        else if (disco[i].lbl.topo > -1 || (i >= ENDERECO_CABECA_LISTA && i < ENDERECO_CABECA_LISTA + quantidadeBlocosNecessariosListaLivre))
+        else if (disco[i].lbl.inicio > -1 || (i >= ENDERECO_CABECA_LISTA && i < ENDERECO_CABECA_LISTA + quantidadeBlocosNecessariosListaLivre))
         {
 
-            addExibicaoEndereco(enderecos, TLEnderecos, i, 'R');
+            adicionarEnderecoNaExibicao(enderecos, TLEnderecos, i, 'R');
         }
         else
         {
-            // addExibicaoEndereco(enderecos, TLEnderecos, i, 'F');
+            // adicionarEnderecoNaExibicao(enderecos, TLEnderecos, i, 'F');
         }
     }
 
-    for (int i = ENDERECO_CABECA_LISTA; i < ENDERECO_CABECA_LISTA + quantidadeBlocosNecessariosListaLivre && disco[i].lbl.topo > -1; i++)
+    for (int i = ENDERECO_CABECA_LISTA; i < ENDERECO_CABECA_LISTA + quantidadeBlocosNecessariosListaLivre && disco[i].lbl.inicio > -1; i++)
     {
-        for (int j = 0; j <= disco[i].lbl.topo; j++)
+        for (int j = 0; j <= disco[i].lbl.inicio; j++)
         {
             if (!disco[disco[i].lbl.endereco[j]].bad)
-                addExibicaoEndereco(enderecos, TLEnderecos, disco[i].lbl.endereco[j], 'F');
+                adicionarEnderecoNaExibicao(enderecos, TLEnderecos, disco[i].lbl.endereco[j], 'F');
         }
     }
 
-    quickSort(0, TLEnderecos - 1, enderecos);
+    ordenarRapidamente(0, TLEnderecos - 1, enderecos);
 
     int linhaTela = 1;
     int colunaTela = 1;
@@ -1944,15 +1944,15 @@ void exibirDisco(Disco disco[], int tamanhoDisco, int quantidadeBlocosNecessario
     }
 }
 
-void listarDiretorio(Disco disco[], int enderecoInodeAtual, bool exibeDiretorioOculto=false)
+void listarConteudoDiretorio(Disco disco[], int localizacaoINodeAtual, bool exibeDiretorioOculto=false)
 {
     int direto, i, linha = 0;
 
-    for (direto = 0; direto < 5 && isEnderecoValido(disco[enderecoInodeAtual].inode.enderecoDireto[direto]); direto++)
+    for (direto = 0; direto < 5 && verificarSeEnderecoEhValido(disco[localizacaoINodeAtual].inode.enderecoDireto[direto]); direto++)
     {
-        for (i = (!exibeDiretorioOculto && direto == 0 ? 2 : 0); i < disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.TL; i++)
+        for (i = (!exibeDiretorioOculto && direto == 0 ? 2 : 0); i < disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.tamanhoLista; i++)
         {
-            printf("%s\t", disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nome);
+            printf("%s\t", disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nomenclatura);
         }
 
         if (linha == 10)
@@ -1963,183 +1963,183 @@ void listarDiretorio(Disco disco[], int enderecoInodeAtual, bool exibeDiretorioO
         linha++;
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoSimplesIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoSimplesIndireto))
     {
-        listarDiretorioInodeIndiretoSimples(disco, disco[enderecoInodeAtual].inode.enderecoSimplesIndireto, linha, 0, exibeDiretorioOculto);
+        listarDiretorioINodeIndiretoSimples(disco, disco[localizacaoINodeAtual].inode.enderecoSimplesIndireto, linha, 0, exibeDiretorioOculto);
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoDuploIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoDuploIndireto))
     {
-        listarDiretorioInodeIndiretoDuplo(disco, disco[enderecoInodeAtual].inode.enderecoDuploIndireto, linha, 0, exibeDiretorioOculto);
+        listarDiretorioINodeIndiretoDuplo(disco, disco[localizacaoINodeAtual].inode.enderecoDuploIndireto, linha, 0, exibeDiretorioOculto);
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoTriploIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoTriploIndireto))
     {
-        listarDiretorioInodeIndiretoTriplo(disco, disco[enderecoInodeAtual].inode.enderecoTriploIndireto, linha, 0, exibeDiretorioOculto);
+        listarDiretorioINodeIndiretoTriplo(disco, disco[localizacaoINodeAtual].inode.enderecoTriploIndireto, linha, 0, exibeDiretorioOculto);
     }
 }
 
-void listarDiretorioComAtributos(Disco disco[], int enderecoInodeAtual, bool exibeDiretorioOculto=false)
+void listarDiretorioDetalhado(Disco disco[], int localizacaoINodeAtual, bool exibeDiretorioOculto=false)
 {
     int direto, i, linha = 0, enderecoInodeArquivo;
 
-    for (direto = 0; direto < 5 && isEnderecoValido(disco[enderecoInodeAtual].inode.enderecoDireto[direto]); direto++)
+    for (direto = 0; direto < 5 && verificarSeEnderecoEhValido(disco[localizacaoINodeAtual].inode.enderecoDireto[direto]); direto++)
     {
-        for (i = (!exibeDiretorioOculto && direto == 0 ? 2 : 0); i < disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.TL; i++)
+        for (i = (!exibeDiretorioOculto && direto == 0 ? 2 : 0); i < disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.tamanhoLista; i++)
         {
-            enderecoInodeArquivo = disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].enderecoINode;
+            enderecoInodeArquivo = disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].localizacaoINode;
 
-            printf("%s ", disco[enderecoInodeArquivo].inode.protecao);
-            printf("%d ", disco[enderecoInodeArquivo].inode.contadorLinkFisico);
-            printf("%s ", getNomeProprietario(disco[enderecoInodeArquivo].inode.proprietario).c_str());
-            printf("%s ", getNomeGrupo(disco[enderecoInodeArquivo].inode.grupo).c_str());
-            printf("%d ", disco[enderecoInodeArquivo].inode.tamanhoArquivo);
-            printf("%s ", disco[enderecoInodeArquivo].inode.dataUltimaAlteracao);
+            printf("%s ", disco[enderecoInodeArquivo].inode.seguranca);
+            printf("%d ", disco[enderecoInodeArquivo].inode.quantidadeLinkFisico);
+            printf("%s ", obterNomeProprietario(disco[enderecoInodeArquivo].inode.dono).c_str());
+            printf("%s ", obterNomeGrupo(disco[enderecoInodeArquivo].inode.categoria).c_str());
+            printf("%d ", disco[enderecoInodeArquivo].inode.dimensaoArquivo);
+            printf("%s ", disco[enderecoInodeArquivo].inode.momentoUltimaAlteracao);
 
-            if (disco[enderecoInodeArquivo].inode.protecao[0] == TIPO_ARQUIVO_LINK)
+            if (disco[enderecoInodeArquivo].inode.seguranca[0] == TIPO_ARQUIVO_LINK)
             {
-                printf("%s",disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nome);
+                printf("%s",disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nomenclatura);
                 textcolor(LIGHTBLUE);
                 printf(" -> %s\n", 
-                                    disco[disco[disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].enderecoINode].inode.enderecoDireto[0]].ls.caminho.c_str());
+                                    disco[disco[disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].localizacaoINode].inode.enderecoDireto[0]].ls.rota.c_str());
                 textcolor(WHITE);
             }
             else
-                printf("%s\n", disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nome);
+                printf("%s\n", disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nomenclatura);
         }
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoSimplesIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoSimplesIndireto))
     {
-        listarDiretorioInodeIndiretoSimples(disco, disco[enderecoInodeAtual].inode.enderecoSimplesIndireto, linha, 1, exibeDiretorioOculto);
+        listarDiretorioINodeIndiretoSimples(disco, disco[localizacaoINodeAtual].inode.enderecoSimplesIndireto, linha, 1, exibeDiretorioOculto);
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoDuploIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoDuploIndireto))
     {
-        listarDiretorioInodeIndiretoDuplo(disco, disco[enderecoInodeAtual].inode.enderecoDuploIndireto, linha, 1, exibeDiretorioOculto);
+        listarDiretorioINodeIndiretoDuplo(disco, disco[localizacaoINodeAtual].inode.enderecoDuploIndireto, linha, 1, exibeDiretorioOculto);
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoTriploIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoTriploIndireto))
     {
-        listarDiretorioInodeIndiretoTriplo(disco, disco[enderecoInodeAtual].inode.enderecoTriploIndireto, linha, 1, exibeDiretorioOculto);
+        listarDiretorioINodeIndiretoTriplo(disco, disco[localizacaoINodeAtual].inode.enderecoTriploIndireto, linha, 1, exibeDiretorioOculto);
     }
 }
 
-int cd(Disco disco[], int enderecoInodeAtual, string nomeDiretorio, int enderecoInodeRaiz, string &caminhoAbsoluto)
+int alterarDiretorio(Disco disco[], int localizacaoINodeAtual, string nomeDiretorio, int localizacaoINodeRaiz, string &rotaAbsoluta)
 {
     int direto, i, endereco = -1;
 
     if (strcmp(nomeDiretorio.c_str(), ".") == 0)
     {
-        return disco[disco[enderecoInodeAtual].inode.enderecoDireto[0]].diretorio.arquivo[0].enderecoINode;
+        return disco[disco[localizacaoINodeAtual].inode.enderecoDireto[0]].diretorio.arquivo[0].localizacaoINode;
     }
     else if (strcmp(nomeDiretorio.c_str(), "..") == 0)
     {
-        if (enderecoInodeAtual == enderecoInodeRaiz)
+        if (localizacaoINodeAtual == localizacaoINodeRaiz)
         {
-            caminhoAbsoluto.assign("~");
+            rotaAbsoluta.assign("~");
         }
         else
         {
-            // encontra a ultima ocorr�ncia de uma string
-            size_t pos = caminhoAbsoluto.rfind("/");
+            // encontra a ultima ocorrï¿½ncia de uma string
+            size_t pos = rotaAbsoluta.rfind("/");
 
-            // verifica se a posi��o encontrada � valida
+            // verifica se a posiï¿½ï¿½o encontrada ï¿½ valida
             // se achou uma posicao da string fornecida
             if (pos != std::string::npos)
             {
-                // a partir da posicao encontrada remove parte do caminho
-                caminhoAbsoluto.replace(pos, caminhoAbsoluto.size(), "");
+                // a partir da posicao encontrada remove parte do rota
+                rotaAbsoluta.replace(pos, rotaAbsoluta.size(), "");
             }
         }
 
-        return disco[disco[enderecoInodeAtual].inode.enderecoDireto[0]].diretorio.arquivo[1].enderecoINode;
+        return disco[disco[localizacaoINodeAtual].inode.enderecoDireto[0]].diretorio.arquivo[1].localizacaoINode;
     }
     else if (strcmp(nomeDiretorio.c_str(), "/") == 0)
     {
-        caminhoAbsoluto.assign("~");
-        return enderecoInodeRaiz;
+        rotaAbsoluta.assign("~");
+        return localizacaoINodeRaiz;
     }
     else if (strcmp(nomeDiretorio.c_str(), "~") == 0)
     {
-        caminhoAbsoluto.assign("~");
-        return enderecoInodeRaiz;
+        rotaAbsoluta.assign("~");
+        return localizacaoINodeRaiz;
     }
     else
     {
-        if (ocorrenciaString(nomeDiretorio, '/') > 0)
+        if (contarOcorrenciasNaString(nomeDiretorio, '/') > 0)
         {
-            int enderecoInodeOrigem = enderecoInodeAtual;
-            vector<string> caminhoOrigem = splitPath(nomeDiretorio);
+            int enderecoInodeOrigem = localizacaoINodeAtual;
+            vector<string> caminhoOrigem = dividirCaminho(nomeDiretorio);
 
             for(const auto& str : caminhoOrigem)
             {
-                enderecoInodeOrigem = cd(disco, enderecoInodeOrigem, str.c_str(), enderecoInodeRaiz, caminhoAbsoluto); 
+                enderecoInodeOrigem = alterarDiretorio(disco, enderecoInodeOrigem, str.c_str(), localizacaoINodeRaiz, rotaAbsoluta); 
             }
 
             return enderecoInodeOrigem; 
         }
         else
         {
-            endereco = existeArquivoOuDiretorio(disco, enderecoInodeAtual, nomeDiretorio, TIPO_ARQUIVO_ARQUIVO, false);
-            if (isEnderecoValido(endereco))
+            endereco = verificarExistenciaArquivoOuDiretorio(disco, localizacaoINodeAtual, nomeDiretorio, TIPO_ARQUIVO_ARQUIVO, false);
+            if (verificarSeEnderecoEhValido(endereco))
             {
-                if (disco[endereco].inode.protecao[0] == TIPO_ARQUIVO_LINK)
+                if (disco[endereco].inode.seguranca[0] == TIPO_ARQUIVO_LINK)
                 {
-                    int enderecoInodeOrigem = enderecoInodeAtual;
-                    vector<string> caminhoOrigem = splitPath(disco[disco[endereco].inode.enderecoDireto[0]].ls.caminho);
+                    int enderecoInodeOrigem = localizacaoINodeAtual;
+                    vector<string> caminhoOrigem = dividirCaminho(disco[disco[endereco].inode.enderecoDireto[0]].ls.rota);
 
                     for(const auto& str : caminhoOrigem)
                     {
-                        enderecoInodeOrigem = cd(disco, enderecoInodeOrigem, str.c_str(), enderecoInodeRaiz, caminhoAbsoluto); 
+                        enderecoInodeOrigem = alterarDiretorio(disco, enderecoInodeOrigem, str.c_str(), localizacaoINodeRaiz, rotaAbsoluta); 
                     }
 
                     return enderecoInodeOrigem;
                 }
                 else
-                    caminhoAbsoluto.append("/" + nomeDiretorio);
+                    rotaAbsoluta.append("/" + nomeDiretorio);
 
                 return endereco;
             }
 
-            return enderecoInodeAtual;
+            return localizacaoINodeAtual;
         }
     }
 }
 
-bool touch(Disco disco[], int enderecoInodeAtual, int enderecoInodeRaiz, char comando[])
+bool criarArquivo(Disco disco[], int localizacaoINodeAtual, int localizacaoINodeRaiz, char instrucao[])
 {
-    string comandoString(comando), caminhoAux;
-    int endereco = getEnderecoNull();
-    vector<string> vetorStringSeparado = split(comandoString, ' ');
+    string comandoString(instrucao), caminhoAux;
+    int endereco = obterEnderecoInvalido();
+    vector<string> vetorStringSeparado = dividirString(comandoString, ' ');
 
-    if (vetorStringSeparado.size() >= 1 && vetorStringSeparado.size() <= 2 && lastPosition(split(vetorStringSeparado.at(0), '/')).size() <= MAX_NOME_ARQUIVO)
+    if (vetorStringSeparado.size() >= 1 && vetorStringSeparado.size() <= 2 && obterUltimaPosicao(dividirString(vetorStringSeparado.at(0), '/')).size() <= MAX_NOME_ARQUIVO)
     {
         char nomeArquivo[vetorStringSeparado.at(0).size() + 1];
         strcpy(nomeArquivo, vetorStringSeparado.at(0).c_str());
-        int tamanhoArquivo = 0;
+        int dimensaoArquivo = 0;
         
         if (vetorStringSeparado.size() == 2)
-        	tamanhoArquivo = atoi(vetorStringSeparado.at(1).c_str());
+        	dimensaoArquivo = atoi(vetorStringSeparado.at(1).c_str());
 
-        int enderecoInodeOrigem = cd(disco, enderecoInodeAtual, nomeArquivo, enderecoInodeRaiz, caminhoAux);
-        vetorStringSeparado = splitPath(nomeArquivo);
+        int enderecoInodeOrigem = alterarDiretorio(disco, localizacaoINodeAtual, nomeArquivo, localizacaoINodeRaiz, caminhoAux);
+        vetorStringSeparado = dividirCaminho(nomeArquivo);
 
-        endereco = existeArquivoOuDiretorio(disco, enderecoInodeOrigem, lastPosition(vetorStringSeparado).c_str());
-        if (isEnderecoNull(endereco)) // ainda n�o tem nenhum arquivo criado com esse nome
+        endereco = verificarExistenciaArquivoOuDiretorio(disco, enderecoInodeOrigem, obterUltimaPosicao(vetorStringSeparado).c_str());
+        if (verificarSeEnderecoEhInvalido(endereco)) // ainda nï¿½o tem nenhum arquivo criado com esse nomenclatura
         {
-            int quantidadeBlocosLivres = getQuantidadeBlocosLivres(disco);
-            int quantidadeBlocosUsados = getQuantidadeBlocosUsar(disco, ceil((float)tamanhoArquivo / (float)10));            
-            strcpy(nomeArquivo, lastPosition(vetorStringSeparado).c_str());
+            int quantidadeBlocosLivres = obterQuantidadeBlocosDisponveis(disco);
+            int quantidadeBlocosUsados = obterQuantidadeBlocosUtilizar(disco, ceil((float)dimensaoArquivo / (float)10));            
+            strcpy(nomeArquivo, obterUltimaPosicao(vetorStringSeparado).c_str());
             if (quantidadeBlocosLivres - quantidadeBlocosUsados >= 0)
-                return isEnderecoValido(addDiretorioEArquivo(disco, TIPO_ARQUIVO_ARQUIVO, enderecoInodeOrigem, nomeArquivo, tamanhoArquivo));
+                return verificarSeEnderecoEhValido(inserirDiretorioEArquivo(disco, TIPO_ARQUIVO_ARQUIVO, enderecoInodeOrigem, nomeArquivo, dimensaoArquivo));
         }
     }
 
     return false;
 }
 
-void buscaBlocosLivresOcupados(Disco disco[], int &qtdBlocosLivres, int &qtdBlocosOcupados, int quantidadeBlocosTotais, int quantidadeBlocosNecessariosListaLivre)
+void procurarBlocosDisponiveisEOcupados(Disco disco[], int &qtdBlocosLivres, int &qtdBlocosOcupados, int quantidadeBlocosTotais, int quantidadeBlocosNecessariosListaLivre)
 {
 
     for (int i = 0; i < quantidadeBlocosTotais; i++)
@@ -2148,59 +2148,59 @@ void buscaBlocosLivresOcupados(Disco disco[], int &qtdBlocosLivres, int &qtdBloc
         {
             qtdBlocosOcupados++;
         }
-        // else if(disco[i].diretorio.TL > 0){
-        //     addExibicaoEndereco(enderecos, TLEnderecos, i, 'A');
+        // else if(disco[i].diretorio.tamanhoLista > 0){
+        //     adicionarEnderecoNaExibicao(enderecos, TLEnderecos, i, 'A');
         // }
-        else if (strlen(disco[i].inode.protecao) > 0)
+        else if (strlen(disco[i].inode.seguranca) > 0)
         {
             qtdBlocosOcupados++;
-            for (int j = 0; j < 5 && !isEnderecoNull(disco[i].inode.enderecoDireto[j]); j++)
+            for (int j = 0; j < 5 && !verificarSeEnderecoEhInvalido(disco[i].inode.enderecoDireto[j]); j++)
             {
                 // printf("%d - arquivo\n", disco[i].inode.enderecoDireto[j]);
-                if (!isEnderecoNull(disco[i].inode.enderecoDireto[j]))
+                if (!verificarSeEnderecoEhInvalido(disco[i].inode.enderecoDireto[j]))
                     qtdBlocosOcupados++;
             }
 
-            if (!isEnderecoNull(disco[i].inode.enderecoSimplesIndireto))
+            if (!verificarSeEnderecoEhInvalido(disco[i].inode.enderecoSimplesIndireto))
             {
                 int enderecoIndireto = 0;
                 enderecoIndireto = disco[i].inode.enderecoSimplesIndireto;
-                // addExibicaoEndereco(enderecos, TLEnderecos, enderecoIndireto, 'I');
+                // adicionarEnderecoNaExibicao(enderecos, TLEnderecos, enderecoIndireto, 'I');
 
-                buscarLivresOcupadosInodeIndiretoSimples(disco, enderecoIndireto, qtdBlocosOcupados);
+                procurarOcupacaoInodeIndiretoSimples(disco, enderecoIndireto, qtdBlocosOcupados);
             }
 
-            if (!isEnderecoNull(disco[i].inode.enderecoDuploIndireto))
+            if (!verificarSeEnderecoEhInvalido(disco[i].inode.enderecoDuploIndireto))
             {
                 int enderecoIndireto = disco[i].inode.enderecoDuploIndireto;
-                // addExibicaoEndereco(enderecos, TLEnderecos, enderecoIndireto, 'I');
+                // adicionarEnderecoNaExibicao(enderecos, TLEnderecos, enderecoIndireto, 'I');
 
-                buscarLivresOcupadosInodeIndiretoDuplo(disco, enderecoIndireto, qtdBlocosOcupados);
+                procurarOcupacaoInodeIndiretoDuplo(disco, enderecoIndireto, qtdBlocosOcupados);
             }
 
-            if (!isEnderecoNull(disco[i].inode.enderecoTriploIndireto))
+            if (!verificarSeEnderecoEhInvalido(disco[i].inode.enderecoTriploIndireto))
             {
                 int enderecoIndireto = disco[i].inode.enderecoTriploIndireto;
-                // addExibicaoEndereco(enderecos, TLEnderecos, enderecoIndireto, 'I');
+                // adicionarEnderecoNaExibicao(enderecos, TLEnderecos, enderecoIndireto, 'I');
 
-                buscarLivresOcupadosInodeIndiretoTriplo(disco, enderecoIndireto, qtdBlocosOcupados);
+                procurarOcupacaoInodeIndiretoTriplo(disco, enderecoIndireto, qtdBlocosOcupados);
             }
         }
 
-        else if (strlen(disco[i].ls.caminho.c_str()) > 0)
+        else if (strlen(disco[i].ls.rota.c_str()) > 0)
         {
             qtdBlocosOcupados++;
         }
-        else if (disco[i].lbl.topo > -1 || (i >= ENDERECO_CABECA_LISTA && i < ENDERECO_CABECA_LISTA + quantidadeBlocosNecessariosListaLivre))
+        else if (disco[i].lbl.inicio > -1 || (i >= ENDERECO_CABECA_LISTA && i < ENDERECO_CABECA_LISTA + quantidadeBlocosNecessariosListaLivre))
         {
 
             qtdBlocosOcupados++;
         }
     }
 
-    for (int i = ENDERECO_CABECA_LISTA; i < ENDERECO_CABECA_LISTA + quantidadeBlocosNecessariosListaLivre && disco[i].lbl.topo > -1; i++)
+    for (int i = ENDERECO_CABECA_LISTA; i < ENDERECO_CABECA_LISTA + quantidadeBlocosNecessariosListaLivre && disco[i].lbl.inicio > -1; i++)
     {
-        for (int j = 0; j <= disco[i].lbl.topo; j++)
+        for (int j = 0; j <= disco[i].lbl.inicio; j++)
         {
             if (!disco[disco[i].lbl.endereco[j]].bad)
                 qtdBlocosLivres++;
@@ -2208,19 +2208,19 @@ void buscaBlocosLivresOcupados(Disco disco[], int &qtdBlocosLivres, int &qtdBloc
     }
 }
 
-void vi(Disco disco[], int enderecoInodeAtual, string nomeArquivo, string &enderecosUtilizados)
+void abrirArquivoParaEdicao(Disco disco[], int localizacaoINodeAtual, string nomeArquivo, string &enderecosUtilizados)
 {
-    int enderecoInodeArquivo = getEnderecoNull(), i, bad = 0;
+    int enderecoInodeArquivo = obterEnderecoInvalido(), i, bad = 0;
     char enderecoToChar[100];
     bool primeiraVez = enderecosUtilizados.size() == 0;
 
     // primeira vez que entra
     if (primeiraVez)
-        enderecoInodeArquivo = existeArquivoOuDiretorio(disco, enderecoInodeAtual, nomeArquivo, TIPO_ARQUIVO_ARQUIVO);
-    else // demais extens�es de inode
-        enderecoInodeArquivo = enderecoInodeAtual;
+        enderecoInodeArquivo = verificarExistenciaArquivoOuDiretorio(disco, localizacaoINodeAtual, nomeArquivo, TIPO_ARQUIVO_ARQUIVO);
+    else // demais extensï¿½es de inode
+        enderecoInodeArquivo = localizacaoINodeAtual;
 
-    if (isEnderecoValido(enderecoInodeArquivo))
+    if (verificarSeEnderecoEhValido(enderecoInodeArquivo))
     {
         if (primeiraVez)
             printf("%s: ", nomeArquivo.c_str());
@@ -2230,35 +2230,35 @@ void vi(Disco disco[], int enderecoInodeAtual, string nomeArquivo, string &ender
 
         for (int direto = 0; direto < 5; direto++)
         {
-            if (isEnderecoValido(disco[enderecoInodeArquivo].inode.enderecoDireto[direto]))
+            if (verificarSeEnderecoEhValido(disco[enderecoInodeArquivo].inode.enderecoDireto[direto]))
             {
                 itoa(disco[enderecoInodeArquivo].inode.enderecoDireto[direto], enderecoToChar, 10);
                 enderecosUtilizados.append(enderecoToChar).append("-");
             }
         }
 
-        if (!isEnderecoNull(disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto))
+        if (!verificarSeEnderecoEhInvalido(disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto))
         {
             itoa(disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto, enderecoToChar, 10);
             enderecosUtilizados.append(enderecoToChar).append("-");
 
-            retornaEnderecosInodeIndiretoSimples(disco, disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto, enderecosUtilizados);
+            retornarEnderecosINodeIndiretoSimples(disco, disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto, enderecosUtilizados);
         }
 
-        if (!isEnderecoNull(disco[enderecoInodeArquivo].inode.enderecoDuploIndireto))
+        if (!verificarSeEnderecoEhInvalido(disco[enderecoInodeArquivo].inode.enderecoDuploIndireto))
         {
             itoa(disco[enderecoInodeArquivo].inode.enderecoDuploIndireto, enderecoToChar, 10);
             enderecosUtilizados.append(enderecoToChar).append("-");
 
-            retornaEnderecosInodeIndiretoDuplo(disco, disco[enderecoInodeArquivo].inode.enderecoDuploIndireto, enderecosUtilizados);
+            retornarEnderecosINodeIndiretoDuplo(disco, disco[enderecoInodeArquivo].inode.enderecoDuploIndireto, enderecosUtilizados);
         }
 
-        if (!isEnderecoNull(disco[enderecoInodeArquivo].inode.enderecoTriploIndireto))
+        if (!verificarSeEnderecoEhInvalido(disco[enderecoInodeArquivo].inode.enderecoTriploIndireto))
         {
             itoa(disco[enderecoInodeArquivo].inode.enderecoTriploIndireto, enderecoToChar, 10);
             enderecosUtilizados.append(enderecoToChar).append("-");
 
-            retornaEnderecosInodeIndiretoTriplo(disco, disco[enderecoInodeArquivo].inode.enderecoTriploIndireto, enderecosUtilizados);
+            retornarEnderecosINodeIndiretoTriplo(disco, disco[enderecoInodeArquivo].inode.enderecoTriploIndireto, enderecosUtilizados);
         }
 
         if (primeiraVez)
@@ -2273,9 +2273,9 @@ void vi(Disco disco[], int enderecoInodeAtual, string nomeArquivo, string &ender
             }
             
             // separa em partes usando '-'
-		    vector<string> partes = split(enderecosUtilizados, '-');
+		    vector<string> partes = dividirString(enderecosUtilizados, '-');
 		
-		    // converte pra n�meros
+		    // converte pra nï¿½meros
 		    vector<int> enderecos;
 		    for (const string &p : partes) {
 		        stringstream ss(p);
@@ -2307,168 +2307,94 @@ void vi(Disco disco[], int enderecoInodeAtual, string nomeArquivo, string &ender
     if (primeiraVez)
         printf("\n");
 }
-/*
-bool rm(Disco disco[], int enderecoInodeAtual, string nomeArquivo, int primeiraVez = 1)
+
+
+bool deletarArquivo(Disco disco[], int localizacaoINodeAtual, string nomeArquivo, int primeiraVez = 1)
 {
     int enderecoInodeArquivo, endereco;
 
     if (primeiraVez)
-        enderecoInodeArquivo = existeArquivoOuDiretorio(disco, enderecoInodeAtual, nomeArquivo, TIPO_ARQUIVO_ARQUIVO);
-    else // demais extens�es de inode
-        enderecoInodeArquivo = enderecoInodeAtual;
+        enderecoInodeArquivo = verificarExistenciaArquivoOuDiretorio(disco, localizacaoINodeAtual, nomeArquivo, TIPO_ARQUIVO_ARQUIVO);
+    else // demais extensï¿½es de inode
+        enderecoInodeArquivo = localizacaoINodeAtual;
 
-    if (isEnderecoValido(enderecoInodeArquivo))
-    {
-        for (int direto = 0; direto < 5; direto++)
-        {
-            if (isEnderecoValido(disco[enderecoInodeArquivo].inode.enderecoDireto[direto]))
-            {
-                initDiscoR(disco[disco[enderecoInodeArquivo].inode.enderecoDireto[direto]]);
-                pushListaBlocoLivre(disco, disco[enderecoInodeArquivo].inode.enderecoDireto[direto]);
-                disco[enderecoInodeArquivo].inode.enderecoDireto[direto] = getEnderecoNull();
-            }
-        }
-
-        if (!isEnderecoNull(disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto))
-        {
-            removeEnderecosInodeIndiretoSimples(disco, disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto);
-
-            initDiscoR(disco[disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto]);
-            pushListaBlocoLivre(disco, disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto);
-
-            disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto = getEnderecoNull();
-        }
-
-        if (!isEnderecoNull(disco[enderecoInodeArquivo].inode.enderecoDuploIndireto))
-        {
-            removeEnderecosInodeIndiretoDuplo(disco, disco[enderecoInodeArquivo].inode.enderecoDuploIndireto);
-
-            initDiscoR(disco[disco[enderecoInodeArquivo].inode.enderecoDuploIndireto]);
-            pushListaBlocoLivre(disco, disco[enderecoInodeArquivo].inode.enderecoDuploIndireto);
-
-            disco[enderecoInodeArquivo].inode.enderecoDuploIndireto = getEnderecoNull();
-        }
-
-        if (!isEnderecoNull(disco[enderecoInodeArquivo].inode.enderecoTriploIndireto))
-        {
-            removeEnderecosInodeIndiretoTriplo(disco, disco[enderecoInodeArquivo].inode.enderecoTriploIndireto);
-
-            initDiscoR(disco[disco[enderecoInodeArquivo].inode.enderecoTriploIndireto]);
-            pushListaBlocoLivre(disco, disco[enderecoInodeArquivo].inode.enderecoTriploIndireto);
-
-            disco[enderecoInodeArquivo].inode.enderecoTriploIndireto = getEnderecoNull();
-        }
-
-        if (primeiraVez)
-        {
-            // remover da entrada do diret�rio o nome do arquivo.
-            int enderecoEntradaDiretorio = buscaEnderecoEntradaDiretorioArquivo(disco, enderecoInodeAtual, nomeArquivo, TIPO_ARQUIVO_ARQUIVO);
-            int pos = 0;
-
-            pos = buscaArquivoNoDiretorio(disco, enderecoEntradaDiretorio, nomeArquivo);
-
-            removeArquivoNoDiretorio(disco, enderecoEntradaDiretorio, pos);
-
-            if (--disco[enderecoInodeArquivo].inode.contadorLinkFisico == 0)
-            {
-                initDiscoR(disco[enderecoInodeArquivo]);
-                pushListaBlocoLivre(disco, enderecoInodeArquivo);
-            }
-
-            return true;
-        }
-    }
-
-    return false;
-}
-*/
-
-bool rm(Disco disco[], int enderecoInodeAtual, string nomeArquivo, int primeiraVez = 1)
-{
-    int enderecoInodeArquivo, endereco;
-
-    if (primeiraVez)
-        enderecoInodeArquivo = existeArquivoOuDiretorio(disco, enderecoInodeAtual, nomeArquivo, TIPO_ARQUIVO_ARQUIVO);
-    else // demais extens�es de inode
-        enderecoInodeArquivo = enderecoInodeAtual;
-
-    if (isEnderecoValido(enderecoInodeArquivo))
+    if (verificarSeEnderecoEhValido(enderecoInodeArquivo))
     {
         if (primeiraVez)
         {
-            // remover da entrada do diret�rio o nome do arquivo.
-            int enderecoEntradaDiretorio = buscaEnderecoEntradaDiretorioArquivo(disco, enderecoInodeAtual, nomeArquivo, TIPO_ARQUIVO_ARQUIVO);
+            // remover da entrada do diretï¿½rio o nomenclatura do arquivo.
+            int enderecoEntradaDiretorio = procurarEnderecoEntradaDiretorioArquivo(disco, localizacaoINodeAtual, nomeArquivo, TIPO_ARQUIVO_ARQUIVO);
             int pos = 0;
             
-			pos = buscaArquivoNoDiretorio(disco, enderecoEntradaDiretorio, nomeArquivo);
-            removeArquivoNoDiretorio(disco, enderecoEntradaDiretorio, pos);
+			pos = procurarArquivoNoDiretorio(disco, enderecoEntradaDiretorio, nomeArquivo);
+            removerArquivoNoDiretorio(disco, enderecoEntradaDiretorio, pos);
             
 
-            if (--disco[enderecoInodeArquivo].inode.contadorLinkFisico == 0)
+            if (--disco[enderecoInodeArquivo].inode.quantidadeLinkFisico == 0)
             {
             	for (int direto = 0; direto < 5; direto++)
         		{
-            		if (isEnderecoValido(disco[enderecoInodeArquivo].inode.enderecoDireto[direto]))
+            		if (verificarSeEnderecoEhValido(disco[enderecoInodeArquivo].inode.enderecoDireto[direto]))
            		 	{
-		                initDiscoR(disco[disco[enderecoInodeArquivo].inode.enderecoDireto[direto]]);
-		                pushListaBlocoLivre(disco, disco[enderecoInodeArquivo].inode.enderecoDireto[direto]);
-		                disco[enderecoInodeArquivo].inode.enderecoDireto[direto] = getEnderecoNull();
+		                inicializarDiscoRestrito(disco[disco[enderecoInodeArquivo].inode.enderecoDireto[direto]]);
+		                adicionarBlocoLivreNaLista(disco, disco[enderecoInodeArquivo].inode.enderecoDireto[direto]);
+		                disco[enderecoInodeArquivo].inode.enderecoDireto[direto] = obterEnderecoInvalido();
 		            }
 		        }
 		
-		        if (!isEnderecoNull(disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto))
+		        if (!verificarSeEnderecoEhInvalido(disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto))
 		        {
-		            removeEnderecosInodeIndiretoSimples(disco, disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto);
+		            removerEnderecosINodeIndiretoSimples(disco, disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto);
 		
-		            initDiscoR(disco[disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto]);
-		            pushListaBlocoLivre(disco, disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto);
+		            inicializarDiscoRestrito(disco[disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto]);
+		            adicionarBlocoLivreNaLista(disco, disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto);
 		
-		            disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto = getEnderecoNull();
+		            disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto = obterEnderecoInvalido();
 		        }
 		
-		        if (!isEnderecoNull(disco[enderecoInodeArquivo].inode.enderecoDuploIndireto))
+		        if (!verificarSeEnderecoEhInvalido(disco[enderecoInodeArquivo].inode.enderecoDuploIndireto))
 		        {
-		            removeEnderecosInodeIndiretoDuplo(disco, disco[enderecoInodeArquivo].inode.enderecoDuploIndireto);
+		            removerEnderecosINodeIndiretoDuplo(disco, disco[enderecoInodeArquivo].inode.enderecoDuploIndireto);
 		
-		            initDiscoR(disco[disco[enderecoInodeArquivo].inode.enderecoDuploIndireto]);
-		            pushListaBlocoLivre(disco, disco[enderecoInodeArquivo].inode.enderecoDuploIndireto);
+		            inicializarDiscoRestrito(disco[disco[enderecoInodeArquivo].inode.enderecoDuploIndireto]);
+		            adicionarBlocoLivreNaLista(disco, disco[enderecoInodeArquivo].inode.enderecoDuploIndireto);
 		
-		            disco[enderecoInodeArquivo].inode.enderecoDuploIndireto = getEnderecoNull();
+		            disco[enderecoInodeArquivo].inode.enderecoDuploIndireto = obterEnderecoInvalido();
 		        }
 		
-		        if (!isEnderecoNull(disco[enderecoInodeArquivo].inode.enderecoTriploIndireto))
+		        if (!verificarSeEnderecoEhInvalido(disco[enderecoInodeArquivo].inode.enderecoTriploIndireto))
 		        {
-		            removeEnderecosInodeIndiretoTriplo(disco, disco[enderecoInodeArquivo].inode.enderecoTriploIndireto);
+		            removerEnderecosINodeIndiretoTriplo(disco, disco[enderecoInodeArquivo].inode.enderecoTriploIndireto);
 		
-		            initDiscoR(disco[disco[enderecoInodeArquivo].inode.enderecoTriploIndireto]);
-		            pushListaBlocoLivre(disco, disco[enderecoInodeArquivo].inode.enderecoTriploIndireto);
+		            inicializarDiscoRestrito(disco[disco[enderecoInodeArquivo].inode.enderecoTriploIndireto]);
+		            adicionarBlocoLivreNaLista(disco, disco[enderecoInodeArquivo].inode.enderecoTriploIndireto);
 		
-		            disco[enderecoInodeArquivo].inode.enderecoTriploIndireto = getEnderecoNull();
+		            disco[enderecoInodeArquivo].inode.enderecoTriploIndireto = obterEnderecoInvalido();
 		        }
 		        
-		        initDiscoR(disco[enderecoInodeArquivo]);
-		        pushListaBlocoLivre(disco, enderecoInodeArquivo);
+		        inicializarDiscoRestrito(disco[enderecoInodeArquivo]);
+		        adicionarBlocoLivreNaLista(disco, enderecoInodeArquivo);
             }
 
             return true;
         }
         else
         {
-        	// Quando for recurs�o para as extens�es de I-node (!primeiraVez)
-            // Precisamos apagar os blocos vinculados � extens�o
+        	// Quando for recursï¿½o para as extensï¿½es de I-node (!primeiraVez)
+            // Precisamos apagar os blocos vinculados ï¿½ extensï¿½o
             for (int direto = 0; direto < 5; direto++)
             {
-                if (isEnderecoValido(disco[enderecoInodeArquivo].inode.enderecoDireto[direto]))
+                if (verificarSeEnderecoEhValido(disco[enderecoInodeArquivo].inode.enderecoDireto[direto]))
                 {
-                    initDiscoR(disco[disco[enderecoInodeArquivo].inode.enderecoDireto[direto]]);
-                    pushListaBlocoLivre(disco, disco[enderecoInodeArquivo].inode.enderecoDireto[direto]);
-                    disco[enderecoInodeArquivo].inode.enderecoDireto[direto] = getEnderecoNull();
+                    inicializarDiscoRestrito(disco[disco[enderecoInodeArquivo].inode.enderecoDireto[direto]]);
+                    adicionarBlocoLivreNaLista(disco, disco[enderecoInodeArquivo].inode.enderecoDireto[direto]);
+                    disco[enderecoInodeArquivo].inode.enderecoDireto[direto] = obterEnderecoInvalido();
                 }
             }
-            // (Para garantir estabilidade, simplificamos o else focado apenas nos diretos caso o professor use extens�es)
+            // (Para garantir estabilidade, simplificamos o else focado apenas nos diretos caso o professor use extensï¿½es)
             
-            initDiscoR(disco[enderecoInodeArquivo]);
-            pushListaBlocoLivre(disco, enderecoInodeArquivo);
+            inicializarDiscoRestrito(disco[enderecoInodeArquivo]);
+            adicionarBlocoLivreNaLista(disco, enderecoInodeArquivo);
             return true;
         }
     }
@@ -2476,62 +2402,62 @@ bool rm(Disco disco[], int enderecoInodeAtual, string nomeArquivo, int primeiraV
     return false;
 }
 
-bool rmdir(Disco disco[], int enderecoInodeAtual, string nomeDiretorio, int &contadorDiretorio, int primeiraVez = 1)
+bool deletarDiretorio(Disco disco[], int localizacaoINodeAtual, string nomeDiretorio, int &contadorDiretorio, int primeiraVez = 1)
 {    
     int enderecoEntradaDiretorio, pos = 0;
 
     if (primeiraVez)        
-        enderecoEntradaDiretorio = buscaEnderecoEntradaDiretorioArquivo(disco, enderecoInodeAtual, nomeDiretorio, TIPO_ARQUIVO_DIRETORIO);
+        enderecoEntradaDiretorio = procurarEnderecoEntradaDiretorioArquivo(disco, localizacaoINodeAtual, nomeDiretorio, TIPO_ARQUIVO_DIRETORIO);
     else
-        enderecoEntradaDiretorio = enderecoInodeAtual;
+        enderecoEntradaDiretorio = localizacaoINodeAtual;
 
     // printf("\n [%d] \n", enderecoEntradaDiretorio);
-    if (isEnderecoValido(enderecoEntradaDiretorio))
+    if (verificarSeEnderecoEhValido(enderecoEntradaDiretorio))
     {
         int enderecoInodeDiretorio;
         if(primeiraVez)
         {
-            pos = buscaArquivoNoDiretorio(disco, enderecoEntradaDiretorio, nomeDiretorio);
+            pos = procurarArquivoNoDiretorio(disco, enderecoEntradaDiretorio, nomeDiretorio);
 
-            enderecoInodeDiretorio = disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].enderecoINode;
+            enderecoInodeDiretorio = disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].localizacaoINode;
         }
         else
-            enderecoInodeDiretorio = enderecoInodeAtual;
+            enderecoInodeDiretorio = localizacaoINodeAtual;
         
         for (int i = 0; i < 5; i++)
         {
-            if (isEnderecoValido(disco[enderecoInodeDiretorio].inode.enderecoDireto[i]))
+            if (verificarSeEnderecoEhValido(disco[enderecoInodeDiretorio].inode.enderecoDireto[i]))
             {
-                contadorDiretorio += disco[disco[enderecoInodeDiretorio].inode.enderecoDireto[i]].diretorio.TL;
+                contadorDiretorio += disco[disco[enderecoInodeDiretorio].inode.enderecoDireto[i]].diretorio.tamanhoLista;
             }
         }
 
-        if (isEnderecoValido(disco[enderecoInodeDiretorio].inode.enderecoSimplesIndireto))
-            retornaQuantidadeDiretorioInodeIndiretoSimples(disco, disco[enderecoInodeDiretorio].inode.enderecoSimplesIndireto, contadorDiretorio);
-        if (isEnderecoValido(disco[enderecoInodeDiretorio].inode.enderecoDuploIndireto))
-            retornaQuantidadeDiretorioInodeIndiretoDuplo(disco, disco[enderecoInodeDiretorio].inode.enderecoDuploIndireto, contadorDiretorio);
-        if (isEnderecoValido(disco[enderecoInodeDiretorio].inode.enderecoTriploIndireto))
-            retornaQuantidadeDiretorioInodeIndiretoTriplo(disco, disco[enderecoInodeDiretorio].inode.enderecoTriploIndireto, contadorDiretorio);
+        if (verificarSeEnderecoEhValido(disco[enderecoInodeDiretorio].inode.enderecoSimplesIndireto))
+            retornarQuantidadeDiretorioINodeIndiretoSimples(disco, disco[enderecoInodeDiretorio].inode.enderecoSimplesIndireto, contadorDiretorio);
+        if (verificarSeEnderecoEhValido(disco[enderecoInodeDiretorio].inode.enderecoDuploIndireto))
+            retornarQuantidadeDiretorioINodeIndiretoDuplo(disco, disco[enderecoInodeDiretorio].inode.enderecoDuploIndireto, contadorDiretorio);
+        if (verificarSeEnderecoEhValido(disco[enderecoInodeDiretorio].inode.enderecoTriploIndireto))
+            retornarQuantidadeDiretorioINodeIndiretoTriplo(disco, disco[enderecoInodeDiretorio].inode.enderecoTriploIndireto, contadorDiretorio);
 
         if(primeiraVez)
         {
             // printf("\n-- %d --\n", contadorDiretorio);
             if (contadorDiretorio <= 2)
             {
-                if (--disco[enderecoInodeDiretorio].inode.contadorLinkFisico == 0)
+                if (--disco[enderecoInodeDiretorio].inode.quantidadeLinkFisico == 0)
                 {
-                    if (isEnderecoValido(disco[enderecoInodeDiretorio].inode.enderecoDireto[0]))
+                    if (verificarSeEnderecoEhValido(disco[enderecoInodeDiretorio].inode.enderecoDireto[0]))
                     {
-                        initDiscoR(disco[disco[enderecoInodeDiretorio].inode.enderecoDireto[0]]);
-                        pushListaBlocoLivre(disco, disco[enderecoInodeDiretorio].inode.enderecoDireto[0]);
-                        disco[enderecoInodeDiretorio].inode.enderecoDireto[0] = getEnderecoNull();
+                        inicializarDiscoRestrito(disco[disco[enderecoInodeDiretorio].inode.enderecoDireto[0]]);
+                        adicionarBlocoLivreNaLista(disco, disco[enderecoInodeDiretorio].inode.enderecoDireto[0]);
+                        disco[enderecoInodeDiretorio].inode.enderecoDireto[0] = obterEnderecoInvalido();
                     }
 
-                    initDiscoR(disco[enderecoInodeDiretorio]);
-                    pushListaBlocoLivre(disco, enderecoInodeDiretorio);
+                    inicializarDiscoRestrito(disco[enderecoInodeDiretorio]);
+                    adicionarBlocoLivreNaLista(disco, enderecoInodeDiretorio);
                 }
 
-                removeArquivoNoDiretorio(disco, enderecoEntradaDiretorio, pos);
+                removerArquivoNoDiretorio(disco, enderecoEntradaDiretorio, pos);
 
                 return true;
             }
@@ -2541,41 +2467,41 @@ bool rmdir(Disco disco[], int enderecoInodeAtual, string nomeDiretorio, int &con
     return false;
 }
 
-void linkSimbolico(Disco disco[], int enderecoInodeAtual, string comando, int enderecoInodeRaiz)
+void criarLinkSimbolico(Disco disco[], int localizacaoINodeAtual, string instrucao, int localizacaoINodeRaiz)
 {
     char caminhoDestinoChar[300];
     string caminhoExemplo;
     string caminhoAux;
     vector<string> caminhosOrigemDestino, caminhoOrigem, caminhoDestino;
 
-    caminhosOrigemDestino = split(comando, ' ');
+    caminhosOrigemDestino = dividirString(instrucao, ' ');
 
     if (caminhosOrigemDestino.size() == 2)
     {
-        caminhoOrigem = split(caminhosOrigemDestino.at(0), '/');
-        caminhoDestino = split(caminhosOrigemDestino.at(1), '/');
+        caminhoOrigem = dividirString(caminhosOrigemDestino.at(0), '/');
+        caminhoDestino = dividirString(caminhosOrigemDestino.at(1), '/');
     	
-    	int enderecoInodeOrigem = enderecoInodeAtual;
+    	int enderecoInodeOrigem = localizacaoINodeAtual;
         string tempCaminhoAux;
         
         bool permissaoConcedida = true;
         
         for(const auto& str : caminhoOrigem)
         {
-            enderecoInodeOrigem = cd(disco, enderecoInodeOrigem, str.c_str(), enderecoInodeRaiz, tempCaminhoAux);
+            enderecoInodeOrigem = alterarDiretorio(disco, enderecoInodeOrigem, str.c_str(), localizacaoINodeRaiz, tempCaminhoAux);
         }
 
-        if (isEnderecoValido(enderecoInodeOrigem))
+        if (verificarSeEnderecoEhValido(enderecoInodeOrigem))
         {
-            string nomeDiretorioOrigem = lastPosition(caminhoOrigem);
-            int enderecoEntradaDiretorio = buscaEnderecoEntradaDiretorioArquivo(disco, enderecoInodeOrigem, nomeDiretorioOrigem);
+            string nomeDiretorioOrigem = obterUltimaPosicao(caminhoOrigem);
+            int enderecoEntradaDiretorio = procurarEnderecoEntradaDiretorioArquivo(disco, enderecoInodeOrigem, nomeDiretorioOrigem);
             
-            if (!isEnderecoNull(enderecoEntradaDiretorio))
+            if (!verificarSeEnderecoEhInvalido(enderecoEntradaDiretorio))
             {
-                int pos = buscaArquivoNoDiretorio(disco, enderecoEntradaDiretorio, nomeDiretorioOrigem);
-                int inodeAlvo = disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].enderecoINode;
+                int pos = procurarArquivoNoDiretorio(disco, enderecoEntradaDiretorio, nomeDiretorioOrigem);
+                int inodeAlvo = disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].localizacaoINode;
 
-                if (disco[inodeAlvo].inode.protecao[1] == '-')
+                if (disco[inodeAlvo].inode.seguranca[1] == '-')
                 	permissaoConcedida = false;
             }
         }
@@ -2583,19 +2509,19 @@ void linkSimbolico(Disco disco[], int enderecoInodeAtual, string comando, int en
         if (!permissaoConcedida)
         {
                     textcolor(RED);
-                    printf("Permissao negada!\n");
+                    printf("privilegio negada!\n");
                     textcolor(WHITE);
         }
         else
         {
         	strcpy(caminhoDestinoChar, caminhoDestino.at(0).c_str());
 	        caminhoAux = caminhosOrigemDestino.at(0);
-	        addDiretorioEArquivo(disco, TIPO_ARQUIVO_LINK, enderecoInodeAtual, caminhoDestinoChar, 1, caminhoAux);
+	        inserirDiretorioEArquivo(disco, TIPO_ARQUIVO_LINK, localizacaoINodeAtual, caminhoDestinoChar, 1, caminhoAux);
         }
     }
 }
 
-void linkFisico(Disco disco[], int enderecoInodeAtual, string comando, int enderecoInodeRaiz)
+void criarLinkFisico(Disco disco[], int localizacaoINodeAtual, string instrucao, int localizacaoINodeRaiz)
 {
     int pos=0;
     char caminhoDestinoChar[300];
@@ -2603,63 +2529,63 @@ void linkFisico(Disco disco[], int enderecoInodeAtual, string comando, int ender
     string caminhoAux;
     vector<string> caminhosOrigemDestino, caminhoOrigem, caminhoDestino;
     
-    caminhosOrigemDestino = split(comando, ' ');
+    caminhosOrigemDestino = dividirString(instrucao, ' ');
 
     if (caminhosOrigemDestino.size() == 2)
     {
-        int enderecoInodeOrigem = enderecoInodeAtual, enderecoEntradaDiretorio,
-        enderecoInodeDestino = enderecoInodeAtual;
+        int enderecoInodeOrigem = localizacaoINodeAtual, enderecoEntradaDiretorio,
+        enderecoInodeDestino = localizacaoINodeAtual;
 
-        caminhoOrigem = split(caminhosOrigemDestino.at(0), '/');
-        caminhoDestino = split(caminhosOrigemDestino.at(1), '/');
+        caminhoOrigem = dividirString(caminhosOrigemDestino.at(0), '/');
+        caminhoDestino = dividirString(caminhosOrigemDestino.at(1), '/');
 		
 		bool permissaoConcedida = true;
         
         for(const auto& str : caminhoOrigem)
         {
-            enderecoInodeOrigem = cd(disco, enderecoInodeOrigem, str.c_str(), enderecoInodeRaiz, caminhoAux);
+            enderecoInodeOrigem = alterarDiretorio(disco, enderecoInodeOrigem, str.c_str(), localizacaoINodeRaiz, caminhoAux);
         }
 
-        if (isEnderecoValido(enderecoInodeOrigem))
+        if (verificarSeEnderecoEhValido(enderecoInodeOrigem))
         {
-            nomeDiretorioOrigem.assign(lastPosition(caminhoOrigem));
-            enderecoEntradaDiretorio = buscaEnderecoEntradaDiretorioArquivo(disco, enderecoInodeOrigem, nomeDiretorioOrigem);
+            nomeDiretorioOrigem.assign(obterUltimaPosicao(caminhoOrigem));
+            enderecoEntradaDiretorio = procurarEnderecoEntradaDiretorioArquivo(disco, enderecoInodeOrigem, nomeDiretorioOrigem);
             
-			if (isEnderecoNull(enderecoEntradaDiretorio))
+			if (verificarSeEnderecoEhInvalido(enderecoEntradaDiretorio))
             {
-            	if (disco[enderecoInodeOrigem].inode.protecao[1] == '-')
+            	if (disco[enderecoInodeOrigem].inode.seguranca[1] == '-')
             		permissaoConcedida = false;
             	else
-                	disco[enderecoInodeOrigem].inode.contadorLinkFisico++;
+                	disco[enderecoInodeOrigem].inode.quantidadeLinkFisico++;
             }
             else
             {
-                pos = buscaArquivoNoDiretorio(disco, enderecoEntradaDiretorio, nomeDiretorioOrigem);
-                enderecoInodeOrigem = disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].enderecoINode;
+                pos = procurarArquivoNoDiretorio(disco, enderecoEntradaDiretorio, nomeDiretorioOrigem);
+                enderecoInodeOrigem = disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].localizacaoINode;
 				
-				if (disco[enderecoInodeOrigem].inode.protecao[1] == '-')
+				if (disco[enderecoInodeOrigem].inode.seguranca[1] == '-')
             		permissaoConcedida = false;
             	else
-                	disco[enderecoInodeOrigem].inode.contadorLinkFisico++;
+                	disco[enderecoInodeOrigem].inode.quantidadeLinkFisico++;
             }
             
             if (!permissaoConcedida)
             {
             	textcolor(RED);
-                printf("Permissao negada!\n");
+                printf("privilegio negada!\n");
                 textcolor(WHITE);
             }
             else
             {
             	for(const auto& str : caminhoDestino)
 	            {
-	                enderecoInodeDestino = cd(disco, enderecoInodeDestino, str.c_str(), enderecoInodeRaiz, caminhoAux);
+	                enderecoInodeDestino = alterarDiretorio(disco, enderecoInodeDestino, str.c_str(), localizacaoINodeRaiz, caminhoAux);
 	            }
 	
 	            nomeDiretorioDestino.assign(caminhoDestino.at(caminhoDestino.size()-1));
 	            strcpy(caminhoDestinoChar, nomeDiretorioDestino.c_str());
 	
-	            addDiretorioEArquivo(disco, disco[enderecoInodeOrigem].inode.protecao[0], 
+	            inserirDiretorioEArquivo(disco, disco[enderecoInodeOrigem].inode.seguranca[0], 
 	                                enderecoInodeDestino, caminhoDestinoChar, 1, caminhoAux, 
 	                                enderecoInodeOrigem);
             }
@@ -2667,58 +2593,58 @@ void linkFisico(Disco disco[], int enderecoInodeAtual, string comando, int ender
     }
 }
 
-void unlinkSimbolico(Disco disco[], int enderecoInodeAtual, string nomeArquivo, int enderecoInodeRaiz)
+void removerLinkSimbolico(Disco disco[], int localizacaoINodeAtual, string nomeArquivo, int localizacaoINodeRaiz)
 {
-    int enderecoEntradaDiretorio = buscaEnderecoEntradaDiretorioArquivo(disco, enderecoInodeAtual, nomeArquivo),
+    int enderecoEntradaDiretorio = procurarEnderecoEntradaDiretorioArquivo(disco, localizacaoINodeAtual, nomeArquivo),
         pos = 0;
 
-    if (isEnderecoValido(enderecoEntradaDiretorio))
+    if (verificarSeEnderecoEhValido(enderecoEntradaDiretorio))
     {
-        pos = buscaArquivoNoDiretorio(disco, enderecoEntradaDiretorio, nomeArquivo);
+        pos = procurarArquivoNoDiretorio(disco, enderecoEntradaDiretorio, nomeArquivo);
 
-        if (disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].enderecoINode].inode.protecao[0] == TIPO_ARQUIVO_LINK)
+        if (disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].localizacaoINode].inode.seguranca[0] == TIPO_ARQUIVO_LINK)
         {
-            disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].enderecoINode].inode.enderecoDireto[0];
+            disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].localizacaoINode].inode.enderecoDireto[0];
 
-            //inicializa aquela posi��o do disco para remover o apontamento
-            initDisco(disco[disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].enderecoINode].inode.enderecoDireto[0]]);
+            //inicializa aquela posiï¿½ï¿½o do disco para remover o apontamento
+            inicializarDisco(disco[disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].localizacaoINode].inode.enderecoDireto[0]]);
             //joga de volta pra lista de blocos livres
-            pushListaBlocoLivre(disco, disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].enderecoINode].inode.enderecoDireto[0]);
+            adicionarBlocoLivreNaLista(disco, disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].localizacaoINode].inode.enderecoDireto[0]);
 
-            //inicializa a posi��o do disco que armazena o inode
-            initDisco(disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].enderecoINode]);
+            //inicializa a posiï¿½ï¿½o do disco que armazena o inode
+            inicializarDisco(disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].localizacaoINode]);
             //joga de volta pra lista de blocos livres
-            pushListaBlocoLivre(disco, disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].enderecoINode].inode.enderecoDireto[0]);
+            adicionarBlocoLivreNaLista(disco, disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].localizacaoINode].inode.enderecoDireto[0]);
 
 
-            removeArquivoNoDiretorio(disco, enderecoEntradaDiretorio, pos);
+            removerArquivoNoDiretorio(disco, enderecoEntradaDiretorio, pos);
         }
     }
 }
 
-bool unlinkFisico(Disco disco[], int enderecoInodeAtual, string nomeArquivo, int enderecoInodeRaiz){
-    int enderecoEntradaDiretorio = buscaEnderecoEntradaDiretorioArquivo(disco, enderecoInodeAtual, nomeArquivo),
+bool removerLinkFisico(Disco disco[], int localizacaoINodeAtual, string nomeArquivo, int localizacaoINodeRaiz){
+    int enderecoEntradaDiretorio = procurarEnderecoEntradaDiretorioArquivo(disco, localizacaoINodeAtual, nomeArquivo),
         pos = 0;
 
-    if (isEnderecoValido(enderecoEntradaDiretorio))
+    if (verificarSeEnderecoEhValido(enderecoEntradaDiretorio))
     {
-        pos = buscaArquivoNoDiretorio(disco, enderecoEntradaDiretorio, nomeArquivo);
+        pos = procurarArquivoNoDiretorio(disco, enderecoEntradaDiretorio, nomeArquivo);
 
-        if (disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].enderecoINode].inode.protecao[0] == TIPO_ARQUIVO_ARQUIVO)
+        if (disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].localizacaoINode].inode.seguranca[0] == TIPO_ARQUIVO_ARQUIVO)
         {
-            return rm(disco, enderecoInodeAtual, nomeArquivo);
+            return deletarArquivo(disco, localizacaoINodeAtual, nomeArquivo);
         }
-        else if (disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].enderecoINode].inode.protecao[0] == TIPO_ARQUIVO_DIRETORIO)
+        else if (disco[disco[enderecoEntradaDiretorio].diretorio.arquivo[pos].localizacaoINode].inode.seguranca[0] == TIPO_ARQUIVO_DIRETORIO)
         {
             int contadorDiretorio=0;
-            return rmdir(disco, enderecoInodeAtual, nomeArquivo, contadorDiretorio);
+            return deletarDiretorio(disco, localizacaoINodeAtual, nomeArquivo, contadorDiretorio);
         }
     }
 
     return false;
 }
 
-void alteraPermissao(char permissao[], char tipoUGO, bool adiciona, char permFornecida[])
+void alterarPermissao(char privilegio[], char tipoUGO, bool adiciona, char permFornecida[])
 {
     int pos;
 
@@ -2733,59 +2659,59 @@ void alteraPermissao(char permissao[], char tipoUGO, bool adiciona, char permFor
     {
         //se permFornecida for diferente de '-', significa que estou adicionando
         if (permFornecida[0] != '-')
-            permissao[pos] = permFornecida[0];
+            privilegio[pos] = permFornecida[0];
 
         pos++;
         if (permFornecida[1] != '-')
-            permissao[pos] = permFornecida[1];
+            privilegio[pos] = permFornecida[1];
 
         pos++;
         if (permFornecida[2] != '-')
-            permissao[pos] = permFornecida[2];
+            privilegio[pos] = permFornecida[2];
     }
     else
     {
         //se permFornecida for igual a '-', significa que estou removendo
         if (permFornecida[0] == '-')
-            permissao[pos] = permFornecida[0];
+            privilegio[pos] = permFornecida[0];
 
         pos++;
         if (permFornecida[1] == '-')
-            permissao[pos] = permFornecida[1];
+            privilegio[pos] = permFornecida[1];
 
         pos++;
         if (permFornecida[2] == '-')
-            permissao[pos] = permFornecida[2];
+            privilegio[pos] = permFornecida[2];
     }
 }
 
-void chmod(Disco disco[], int enderecoInodeAtual, string comando)
+void definirPermissao(Disco disco[], int localizacaoINodeAtual, string instrucao)
 {
     char perm[4];
     int r, w, x, pos;
-    char permissao[11];
-    vector<string> splitComando = split(comando, ' ');
+    char privilegio[11];
+    vector<string> dividirComando = dividirString(instrucao, ' ');
     //chmod u+w teste.old
     //chmod g+rw teste.old
     //chmod o-rwx teste.old
     //chmod
     //chmod 777 teste.old
 
-    if (splitComando.size() == 2)
+    if (dividirComando.size() == 2)
     {
-        string permissaoSolicitada(stringToLower(splitComando.at(0)));
-        string nomeArquivo(splitComando.at(1));
-        int enderecoInode = existeArquivoOuDiretorio(disco, enderecoInodeAtual, nomeArquivo);
+        string permissaoSolicitada(converterParaMinusculas(dividirComando.at(0)));
+        string nomeArquivo(dividirComando.at(1));
+        int localizacaoINode = verificarExistenciaArquivoOuDiretorio(disco, localizacaoINodeAtual, nomeArquivo);
 
-        if (isEnderecoValido(enderecoInode))
+        if (verificarSeEnderecoEhValido(localizacaoINode))
         {
-            strcpy(permissao, disco[enderecoInode].inode.protecao);
+            strcpy(privilegio, disco[localizacaoINode].inode.seguranca);
 
-            if (permissaoSolicitada.at(1) == '+') //est� adicionando permiss�o
+            if (permissaoSolicitada.at(1) == '+') //estï¿½ adicionando permissï¿½o
             {
-                r = ocorrenciaString(permissaoSolicitada.substr(2), 'r');
-                w = ocorrenciaString(permissaoSolicitada.substr(2), 'w');
-                x = ocorrenciaString(permissaoSolicitada.substr(2), 'x');
+                r = contarOcorrenciasNaString(permissaoSolicitada.substr(2), 'r');
+                w = contarOcorrenciasNaString(permissaoSolicitada.substr(2), 'w');
+                x = contarOcorrenciasNaString(permissaoSolicitada.substr(2), 'x');
 
                 if (r > 0)
                     perm[0] = 'r';
@@ -2809,23 +2735,23 @@ void chmod(Disco disco[], int enderecoInodeAtual, string comando)
                     case 'u':
                     case 'g':
                     case 'o':
-                        alteraPermissao(permissao, permissaoSolicitada.at(0), true, perm);
+                        alterarPermissao(privilegio, permissaoSolicitada.at(0), true, perm);
                     break;
 
                     case 'a':
-                        alteraPermissao(permissao, 'u', true, perm);
-                        alteraPermissao(permissao, 'g', true, perm);
-                        alteraPermissao(permissao, 'o', true, perm);
+                        alterarPermissao(privilegio, 'u', true, perm);
+                        alterarPermissao(privilegio, 'g', true, perm);
+                        alterarPermissao(privilegio, 'o', true, perm);
                     break;
                 }
 
-                strcpy(disco[enderecoInode].inode.protecao, permissao);
+                strcpy(disco[localizacaoINode].inode.seguranca, privilegio);
             }
-            else if (permissaoSolicitada.at(1) == '-') //est� retirando permiss�o
+            else if (permissaoSolicitada.at(1) == '-') //estï¿½ retirando permissï¿½o
             {
-                r = ocorrenciaString(permissaoSolicitada.substr(2), 'r');
-                w = ocorrenciaString(permissaoSolicitada.substr(2), 'w');
-                x = ocorrenciaString(permissaoSolicitada.substr(2), 'x');
+                r = contarOcorrenciasNaString(permissaoSolicitada.substr(2), 'r');
+                w = contarOcorrenciasNaString(permissaoSolicitada.substr(2), 'w');
+                x = contarOcorrenciasNaString(permissaoSolicitada.substr(2), 'x');
 
                 if (r > 0)
                     perm[0] = '-';
@@ -2849,26 +2775,26 @@ void chmod(Disco disco[], int enderecoInodeAtual, string comando)
                     case 'u':
                     case 'g':
                     case 'o':
-                        alteraPermissao(permissao, permissaoSolicitada.at(0), false, perm);
+                        alterarPermissao(privilegio, permissaoSolicitada.at(0), false, perm);
                     break;
 
                     case 'a':
-                        alteraPermissao(permissao, 'u', false, perm);
-                        alteraPermissao(permissao, 'g', false, perm);
-                        alteraPermissao(permissao, 'o', false, perm);
+                        alterarPermissao(privilegio, 'u', false, perm);
+                        alterarPermissao(privilegio, 'g', false, perm);
+                        alterarPermissao(privilegio, 'o', false, perm);
                     break;
                 }
 
-                strcpy(disco[enderecoInode].inode.protecao, permissao);
+                strcpy(disco[localizacaoINode].inode.seguranca, privilegio);
             }
             else //utilizou ou caracter ou int
             { 
                 if (permissaoSolicitada.at(0) >= '0' && permissaoSolicitada.at(0) <= '7')
                 {
                     int per = atoi(permissaoSolicitada.c_str());
-                    convertPermissaoUGOToString(per, permissao, 1);
+                    converterPermissaoUGOParaTexto(per, privilegio, 1);
 
-                    strcpy(disco[enderecoInode].inode.protecao, permissao);
+                    strcpy(disco[localizacaoINode].inode.seguranca, privilegio);
                 }
             }
         }
@@ -2880,8 +2806,8 @@ void buscaBlocosInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, s
 {
     char enderecoToChar[300];
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
     {
         itoa(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecoToChar, 10);
         enderecosUtilizados.append(enderecoToChar).append("-");
@@ -2891,12 +2817,12 @@ void buscaBlocosInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, s
 
     if (ChamadoPeloTriplo)
     {
-        if (isEnderecoValido(disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1]))
+        if (verificarSeEnderecoEhValido(disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1]))
         {
             string nomeArq;
             nomeArq.assign("");
 
-            buscaBlocosArquivo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1], enderecosUtilizados);
+            procurarBlocosDoArquivo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1], enderecosUtilizados);
         }
     }
 }
@@ -2906,8 +2832,8 @@ void buscaBlocosInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, str
 {
     char enderecoToChar[300];
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
     {
         itoa(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecoToChar, 10);
         enderecosUtilizados.append(enderecoToChar).append("-");
@@ -2922,8 +2848,8 @@ void buscaBlocosInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, st
 {
     char enderecoToChar[300];
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
     {
         itoa(disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], enderecoToChar, 10);
         enderecosUtilizados.append(enderecoToChar).append("-");
@@ -2933,27 +2859,27 @@ void buscaBlocosInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto, st
     }
 }
 
-void buscaBlocosArquivo(Disco disco[], int enderecoInodeArquivo, string &enderecosUtilizados)
+void procurarBlocosDoArquivo(Disco disco[], int enderecoInodeArquivo, string &enderecosUtilizados)
 {
     int i;
     char enderecoToChar[100];
     bool primeiraVez = enderecosUtilizados.size() == 0;
 
-    if (isEnderecoValido(enderecoInodeArquivo))
+    if (verificarSeEnderecoEhValido(enderecoInodeArquivo))
     {
         itoa(enderecoInodeArquivo, enderecoToChar, 10);
         enderecosUtilizados.append(enderecoToChar).append("-");
 
         for (int direto = 0; direto < 5; direto++)
         {
-            if (isEnderecoValido(disco[enderecoInodeArquivo].inode.enderecoDireto[direto]))
+            if (verificarSeEnderecoEhValido(disco[enderecoInodeArquivo].inode.enderecoDireto[direto]))
             {
                 itoa(disco[enderecoInodeArquivo].inode.enderecoDireto[direto], enderecoToChar, 10);
                 enderecosUtilizados.append(enderecoToChar).append("-");
             }
         }
 
-        if (!isEnderecoNull(disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto))
+        if (!verificarSeEnderecoEhInvalido(disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto))
         {
             itoa(disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto, enderecoToChar, 10);
             enderecosUtilizados.append(enderecoToChar).append("-");
@@ -2961,7 +2887,7 @@ void buscaBlocosArquivo(Disco disco[], int enderecoInodeArquivo, string &enderec
             buscaBlocosInodeIndiretoSimples(disco, disco[enderecoInodeArquivo].inode.enderecoSimplesIndireto, enderecosUtilizados);
         }
 
-        if (!isEnderecoNull(disco[enderecoInodeArquivo].inode.enderecoDuploIndireto))
+        if (!verificarSeEnderecoEhInvalido(disco[enderecoInodeArquivo].inode.enderecoDuploIndireto))
         {
             itoa(disco[enderecoInodeArquivo].inode.enderecoDuploIndireto, enderecoToChar, 10);
             enderecosUtilizados.append(enderecoToChar).append("-");
@@ -2969,7 +2895,7 @@ void buscaBlocosArquivo(Disco disco[], int enderecoInodeArquivo, string &enderec
             buscaBlocosInodeIndiretoDuplo(disco, disco[enderecoInodeArquivo].inode.enderecoDuploIndireto, enderecosUtilizados);
         }
 
-        if (!isEnderecoNull(disco[enderecoInodeArquivo].inode.enderecoTriploIndireto))
+        if (!verificarSeEnderecoEhInvalido(disco[enderecoInodeArquivo].inode.enderecoTriploIndireto))
         {
             itoa(disco[enderecoInodeArquivo].inode.enderecoTriploIndireto, enderecoToChar, 10);
             enderecosUtilizados.append(enderecoToChar).append("-");
@@ -2986,7 +2912,7 @@ void buscaBlocosArquivo(Disco disco[], int enderecoInodeArquivo, string &enderec
 
 
 
-// utilizado para exibir os diret�rios do disco
+// utilizado para exibir os diretï¿½rios do disco
 void listaDiretorioAtualIgualExplorerInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeArquivo;
@@ -2995,21 +2921,21 @@ void listaDiretorioAtualIgualExplorerInodeIndiretoSimples(Disco disco[], int end
     string blocos;
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
     {
 
-        for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.TL; i++)
+        for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.tamanhoLista; i++)
         {
-            enderecoInodeArquivo = disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].enderecoINode;
+            enderecoInodeArquivo = disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].localizacaoINode;
 
-            printf("%s\t\t",disco[enderecoInodeArquivo].diretorio.arquivo[i].nome);
+            printf("%s\t\t",disco[enderecoInodeArquivo].diretorio.arquivo[i].nomenclatura);
 
-            if (disco[enderecoInodeArquivo].inode.protecao[0] == TIPO_ARQUIVO_LINK)
+            if (disco[enderecoInodeArquivo].inode.seguranca[0] == TIPO_ARQUIVO_LINK)
             {
                 printf("Link\t\t");
             }
-            else if (disco[enderecoInodeArquivo].inode.protecao[0] == TIPO_ARQUIVO_DIRETORIO)
+            else if (disco[enderecoInodeArquivo].inode.seguranca[0] == TIPO_ARQUIVO_DIRETORIO)
             {
                 printf("Diretorio\t");
             }
@@ -3019,7 +2945,7 @@ void listaDiretorioAtualIgualExplorerInodeIndiretoSimples(Disco disco[], int end
             }
 
             blocos.assign("");
-            buscaBlocosArquivo(disco, enderecoInodeArquivo, blocos);
+            procurarBlocosDoArquivo(disco, enderecoInodeArquivo, blocos);
             printf("%s\n", blocos.c_str());
         }
     
@@ -3028,23 +2954,23 @@ void listaDiretorioAtualIgualExplorerInodeIndiretoSimples(Disco disco[], int end
 
     if (ChamadoPeloTriplo)
     {
-        if (isEnderecoValido(disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO-1]))
+        if (verificarSeEnderecoEhValido(disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO-1]))
         {
             listaDiretorioAtualIgualExplorer(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1], false);
         }
     }
 }
 
-// utilizado para exibir os diret�rios do disco
+// utilizado para exibir os diretï¿½rios do disco
 void listaDiretorioAtualIgualExplorerInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int ChamadoPeloTriplo = 0)
 {
 
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
         {
             listaDiretorioAtualIgualExplorerInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
             inicio++;
@@ -3052,16 +2978,16 @@ void listaDiretorioAtualIgualExplorerInodeIndiretoDuplo(Disco disco[], int ender
     }
 }
 
-// utilizado para exibir os diretórios do disco
+// utilizado para exibir os diretÃ³rios do disco
 void listaDiretorioAtualIgualExplorerInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto,  int ChamadoPeloTriplo = 0)
 {
 
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
         {
             listaDiretorioAtualIgualExplorerInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], 1);
             inicio++;
@@ -3070,28 +2996,28 @@ void listaDiretorioAtualIgualExplorerInodeIndiretoTriplo(Disco disco[], int ende
 }
 
 
-void listaDiretorioAtualIgualExplorer(Disco disco[], int enderecoInodeAtual, bool primeiraVez=true)
+void listaDiretorioAtualIgualExplorer(Disco disco[], int localizacaoINodeAtual, bool primeiraVez=true)
 {
     int direto, i, enderecoInodeArquivo;
     string blocos;
         
     if (primeiraVez){
-        printf("Nome\t\tTipo\t\tBlocos\n");
+        printf("nomenclatura\t\tTipo\t\tBlocos\n");
     }
 
-    for (direto = 0; direto < 5 && isEnderecoValido(disco[enderecoInodeAtual].inode.enderecoDireto[direto]); direto++)
+    for (direto = 0; direto < 5 && verificarSeEnderecoEhValido(disco[localizacaoINodeAtual].inode.enderecoDireto[direto]); direto++)
     {
-        for (i = (direto == 0 ? 2 : 0); i < disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.TL; i++)
+        for (i = (direto == 0 ? 2 : 0); i < disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.tamanhoLista; i++)
         {
-            enderecoInodeArquivo = disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].enderecoINode;
+            enderecoInodeArquivo = disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].localizacaoINode;
 
-            printf("%s\t\t",disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nome);           
+            printf("%s\t\t",disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nomenclatura);           
             
-            if (disco[enderecoInodeArquivo].inode.protecao[0] == TIPO_ARQUIVO_LINK)
+            if (disco[enderecoInodeArquivo].inode.seguranca[0] == TIPO_ARQUIVO_LINK)
             {
                 printf("Link\t\t");
             }
-            else if (disco[enderecoInodeArquivo].inode.protecao[0] == TIPO_ARQUIVO_DIRETORIO)
+            else if (disco[enderecoInodeArquivo].inode.seguranca[0] == TIPO_ARQUIVO_DIRETORIO)
             {
                 printf("Diretorio\t");
             }
@@ -3101,52 +3027,52 @@ void listaDiretorioAtualIgualExplorer(Disco disco[], int enderecoInodeAtual, boo
             }
 
             blocos.assign("");
-            buscaBlocosArquivo(disco, enderecoInodeArquivo, blocos);
+            procurarBlocosDoArquivo(disco, enderecoInodeArquivo, blocos);
             printf("%s\n", blocos.c_str());
         }
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoSimplesIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoSimplesIndireto))
     {
-        listaDiretorioAtualIgualExplorerInodeIndiretoSimples(disco, disco[enderecoInodeAtual].inode.enderecoSimplesIndireto);
+        listaDiretorioAtualIgualExplorerInodeIndiretoSimples(disco, disco[localizacaoINodeAtual].inode.enderecoSimplesIndireto);
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoDuploIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoDuploIndireto))
     {
-        listaDiretorioAtualIgualExplorerInodeIndiretoDuplo(disco, disco[enderecoInodeAtual].inode.enderecoDuploIndireto);
+        listaDiretorioAtualIgualExplorerInodeIndiretoDuplo(disco, disco[localizacaoINodeAtual].inode.enderecoDuploIndireto);
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoTriploIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoTriploIndireto))
     {
-        listaDiretorioAtualIgualExplorerInodeIndiretoTriplo(disco, disco[enderecoInodeAtual].inode.enderecoTriploIndireto);
+        listaDiretorioAtualIgualExplorerInodeIndiretoTriplo(disco, disco[localizacaoINodeAtual].inode.enderecoTriploIndireto);
     }
 }
 
 
 
-void buscaBlocosIntegrosCorrompidos(Disco disco[], int enderecoInodeAtual, bool primeiraVez=true)
+void procurarBlocosIntegrosCorrompidos(Disco disco[], int localizacaoINodeAtual, bool primeiraVez=true)
 {
     int direto, i, enderecoInodeArquivo;
     string blocos;
         
     if (primeiraVez){
-        printf("Nome\t\tStatus\n");
+        printf("nomenclatura\t\tStatus\n");
     }
 
-    for (direto = 0; direto < 5 && isEnderecoValido(disco[enderecoInodeAtual].inode.enderecoDireto[direto]); direto++)
+    for (direto = 0; direto < 5 && verificarSeEnderecoEhValido(disco[localizacaoINodeAtual].inode.enderecoDireto[direto]); direto++)
     {
-        for (i = (direto == 0 ? 2 : 0); i < disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.TL; i++)
+        for (i = (direto == 0 ? 2 : 0); i < disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.tamanhoLista; i++)
         {
-            enderecoInodeArquivo = disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].enderecoINode;
+            enderecoInodeArquivo = disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].localizacaoINode;
 
-            printf("%s\t\t",disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nome);
+            printf("%s\t\t",disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nomenclatura);
 
             blocos.assign("");
 
-            buscaBlocosArquivo(disco, enderecoInodeArquivo, blocos); 
+            procurarBlocosDoArquivo(disco, enderecoInodeArquivo, blocos); 
 
             vector<string> strBloco;
-            strBloco = split(blocos, '-');
+            strBloco = dividirString(blocos, '-');
             int enderecoBloco;
             int quantidadeBad=0;
             for(const auto& str : strBloco)
@@ -3154,7 +3080,7 @@ void buscaBlocosIntegrosCorrompidos(Disco disco[], int enderecoInodeAtual, bool 
                 
                 enderecoBloco = atoi(str.c_str());
                 // printf("\n -- %d -- \n", enderecoBloco);
-                if(isEnderecoBad(disco, enderecoBloco))
+                if(verificarSeEnderecoEstaDescalibrado(disco, enderecoBloco))
                     quantidadeBad++;
             }
 
@@ -3175,23 +3101,23 @@ void buscaBlocosIntegrosCorrompidos(Disco disco[], int enderecoInodeAtual, bool 
         }
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoSimplesIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoSimplesIndireto))
     {
-        listaDiretorioAtualIgualExplorerInodeIndiretoSimples(disco, disco[enderecoInodeAtual].inode.enderecoSimplesIndireto);
+        listaDiretorioAtualIgualExplorerInodeIndiretoSimples(disco, disco[localizacaoINodeAtual].inode.enderecoSimplesIndireto);
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoDuploIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoDuploIndireto))
     {
-        listaDiretorioAtualIgualExplorerInodeIndiretoDuplo(disco, disco[enderecoInodeAtual].inode.enderecoDuploIndireto);
+        listaDiretorioAtualIgualExplorerInodeIndiretoDuplo(disco, disco[localizacaoINodeAtual].inode.enderecoDuploIndireto);
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoTriploIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoTriploIndireto))
     {
-        listaDiretorioAtualIgualExplorerInodeIndiretoTriplo(disco, disco[enderecoInodeAtual].inode.enderecoTriploIndireto);
+        listaDiretorioAtualIgualExplorerInodeIndiretoTriplo(disco, disco[localizacaoINodeAtual].inode.enderecoTriploIndireto);
     }
 }
 
-// utilizado para exibir os diret�rios do disco
+// utilizado para exibir os diretï¿½rios do disco
 void listaLinkDiretorioAtualInodeIndiretoSimples(Disco disco[], int enderecoInodeIndireto, int ChamadoPeloTriplo = 0)
 {
     int enderecoInodeArquivo;
@@ -3200,27 +3126,27 @@ void listaLinkDiretorioAtualInodeIndiretoSimples(Disco disco[], int enderecoInod
     string blocos;
 
     int inicio = 0;
-    // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
+    // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+    while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO - ChamadoPeloTriplo)
     {
 
-        for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.TL; i++)
+        for (i = 0; i < disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.tamanhoLista; i++)
         {
-            enderecoInodeArquivo = disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].enderecoINode;
+            enderecoInodeArquivo = disco[disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio]].diretorio.arquivo[i].localizacaoINode;
 
-            if (disco[enderecoInodeArquivo].inode.protecao[0] == TIPO_ARQUIVO_LINK || disco[enderecoInodeArquivo].inode.contadorLinkFisico > 1)
+            if (disco[enderecoInodeArquivo].inode.seguranca[0] == TIPO_ARQUIVO_LINK || disco[enderecoInodeArquivo].inode.quantidadeLinkFisico > 1)
             {
-                printf("%s\t\t",disco[enderecoInodeArquivo].diretorio.arquivo[i].nome);
-                if (disco[enderecoInodeArquivo].inode.protecao[0] == TIPO_ARQUIVO_LINK)
+                printf("%s\t\t",disco[enderecoInodeArquivo].diretorio.arquivo[i].nomenclatura);
+                if (disco[enderecoInodeArquivo].inode.seguranca[0] == TIPO_ARQUIVO_LINK)
                 {
-                    printf("Simbolico\t\t");
+                    printf("s\t\t");
                 }
-                else if (disco[enderecoInodeArquivo].inode.contadorLinkFisico > 1){
+                else if (disco[enderecoInodeArquivo].inode.quantidadeLinkFisico > 1){
                     printf("Fisico\t\t");
                 }
 
                 printf("%d\t\t", enderecoInodeArquivo);
-                printf("%d\n", disco[enderecoInodeArquivo].inode.contadorLinkFisico);
+                printf("%d\n", disco[enderecoInodeArquivo].inode.quantidadeLinkFisico);
             }
         }
     
@@ -3229,23 +3155,23 @@ void listaLinkDiretorioAtualInodeIndiretoSimples(Disco disco[], int enderecoInod
 
     if (ChamadoPeloTriplo)
     {
-        if (isEnderecoValido(disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO-1]))
+        if (verificarSeEnderecoEhValido(disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO-1]))
         {
-            listaLinkDiretorioAtual(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1], false);
+            mostrarLinksNoDiretorio(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[MAX_INODEINDIRETO - 1], false);
         }
     }
 }
 
-// utilizado para exibir os diret�rios do disco
+// utilizado para exibir os diretï¿½rios do disco
 void listaLinkDiretorioAtualInodeIndiretoDuplo(Disco disco[], int enderecoInodeIndireto, int ChamadoPeloTriplo = 0)
 {
 
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
         {
             listaLinkDiretorioAtualInodeIndiretoSimples(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], ChamadoPeloTriplo && inicio + 1 == MAX_INODEINDIRETO);
             inicio++;
@@ -3253,16 +3179,16 @@ void listaLinkDiretorioAtualInodeIndiretoDuplo(Disco disco[], int enderecoInodeI
     }
 }
 
-// utilizado para exibir os diret�rios do disco
+// utilizado para exibir os diretï¿½rios do disco
 void listaLinkDiretorioAtualInodeIndiretoTriplo(Disco disco[], int enderecoInodeIndireto,  int ChamadoPeloTriplo = 0)
 {
 
-    // verifica se a quantidade de Endere�os no inode indireto n�o est� cheio
-    if (disco[enderecoInodeIndireto].inodeIndireto.TL > 0)
+    // verifica se a quantidade de Endereï¿½os no inode indireto nï¿½o estï¿½ cheio
+    if (disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista > 0)
     {
         int inicio = 0;
-        // adiciona novos blocos enquanto a quantidade for menor que o necess�rio e que n�o esteja cheio
-        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.TL && inicio < MAX_INODEINDIRETO)
+        // adiciona novos blocos enquanto a quantidade for menor que o necessï¿½rio e que nï¿½o esteja cheio
+        while (inicio < disco[enderecoInodeIndireto].inodeIndireto.tamanhoLista && inicio < MAX_INODEINDIRETO)
         {
             listaLinkDiretorioAtualInodeIndiretoDuplo(disco, disco[enderecoInodeIndireto].inodeIndireto.endereco[inicio], 1);
             inicio++;
@@ -3271,94 +3197,95 @@ void listaLinkDiretorioAtualInodeIndiretoTriplo(Disco disco[], int enderecoInode
 }
 
 
-void listaLinkDiretorioAtual(Disco disco[], int enderecoInodeAtual, bool primeiraVez=true)
+void mostrarLinksNoDiretorio(Disco disco[], int localizacaoINodeAtual, bool primeiraVez=true)
 {
     int direto, i, enderecoInodeArquivo;
     string blocos;
         
     if (primeiraVez){
-        printf("Nome\t\tTipo\t\tNum. Inode\t\tQtd. Link Fisico\n");
+        printf("nomenclatura\t\tTipo\t\tNum. Inode\t\tQtd. Link Fisico\n");
     }
 
-    for (direto = 0; direto < 5 && isEnderecoValido(disco[enderecoInodeAtual].inode.enderecoDireto[direto]); direto++)
+    for (direto = 0; direto < 5 && verificarSeEnderecoEhValido(disco[localizacaoINodeAtual].inode.enderecoDireto[direto]); direto++)
     {
-        for (i = (direto == 0 ? 2 : 0); i < disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.TL; i++)
+        for (i = (direto == 0 ? 2 : 0); i < disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.tamanhoLista; i++)
         {
-            enderecoInodeArquivo = disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].enderecoINode;
+            enderecoInodeArquivo = disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].localizacaoINode;
 
-            if (disco[enderecoInodeArquivo].inode.protecao[0] == TIPO_ARQUIVO_LINK || disco[enderecoInodeArquivo].inode.contadorLinkFisico > 1)
+            if (disco[enderecoInodeArquivo].inode.seguranca[0] == TIPO_ARQUIVO_LINK || disco[enderecoInodeArquivo].inode.quantidadeLinkFisico > 1)
             {
-                printf("%s\t\t",disco[disco[enderecoInodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nome);
-                if (disco[enderecoInodeArquivo].inode.protecao[0] == TIPO_ARQUIVO_LINK)
+                printf("%s\t\t",disco[disco[localizacaoINodeAtual].inode.enderecoDireto[direto]].diretorio.arquivo[i].nomenclatura);
+                if (disco[enderecoInodeArquivo].inode.seguranca[0] == TIPO_ARQUIVO_LINK)
                 {
-                    printf("Simbolico\t\t");
+                    printf("s\t\t");
                 }
-                else if (disco[enderecoInodeArquivo].inode.contadorLinkFisico > 1){
+                else if (disco[enderecoInodeArquivo].inode.quantidadeLinkFisico > 1){
                     printf("Fisico\t\t\t");
                 }
 
                 printf("%d\t\t\t", enderecoInodeArquivo);
-                printf("%d\n", disco[enderecoInodeArquivo].inode.contadorLinkFisico);
+                printf("%d\n", disco[enderecoInodeArquivo].inode.quantidadeLinkFisico);
             }
         }
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoSimplesIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoSimplesIndireto))
     {
-        listaDiretorioAtualIgualExplorerInodeIndiretoSimples(disco, disco[enderecoInodeAtual].inode.enderecoSimplesIndireto);
+        listaDiretorioAtualIgualExplorerInodeIndiretoSimples(disco, disco[localizacaoINodeAtual].inode.enderecoSimplesIndireto);
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoDuploIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoDuploIndireto))
     {
-        listaDiretorioAtualIgualExplorerInodeIndiretoDuplo(disco, disco[enderecoInodeAtual].inode.enderecoDuploIndireto);
+        listaDiretorioAtualIgualExplorerInodeIndiretoDuplo(disco, disco[localizacaoINodeAtual].inode.enderecoDuploIndireto);
     }
 
-    if (!isEnderecoNull(disco[enderecoInodeAtual].inode.enderecoTriploIndireto))
+    if (!verificarSeEnderecoEhInvalido(disco[localizacaoINodeAtual].inode.enderecoTriploIndireto))
     {
-        listaDiretorioAtualIgualExplorerInodeIndiretoTriplo(disco, disco[enderecoInodeAtual].inode.enderecoTriploIndireto);
+        listaDiretorioAtualIgualExplorerInodeIndiretoTriplo(disco, disco[localizacaoINodeAtual].inode.enderecoTriploIndireto);
     }
 }
 
-int mkdir(Disco disco[], int enderecoInodeAtual, int enderecoInodeRaiz, string comando)
+int criarDiretorio(Disco disco[], int localizacaoINodeAtual, int localizacaoINodeRaiz, string instrucao)
 {
     int i=0;
     bool possivelInserir=true;
     string caminhoAux;
     char nomeDiretorio[MAX_NOME_ARQUIVO];
-    int enderecoInodeGravacao = enderecoInodeAtual;
-    vector<string> caminhoCompleto = splitPath(comando);
+    int enderecoInodeGravacao = localizacaoINodeAtual;
+    vector<string> caminhoCompleto = dividirCaminho(instrucao);
 
     for(const auto& str : caminhoCompleto)
     {
 
         if (strcmp(str.c_str(), "/") == 0)
         {
-            enderecoInodeGravacao = cd(disco, enderecoInodeGravacao, str.c_str(), enderecoInodeRaiz, caminhoAux);
+            enderecoInodeGravacao = alterarDiretorio(disco, enderecoInodeGravacao, str.c_str(), localizacaoINodeRaiz, caminhoAux);
         }
         else{
-            //verifico se o arquivo atual n�o � o �ltimo do caminho. No �ltimo, vai ser o diret�rio que irei criar
+            //verifico se o arquivo atual nï¿½o ï¿½ o ï¿½ltimo do rota. No ï¿½ltimo, vai ser o diretï¿½rio que irei criar
             if (i < caminhoCompleto.size()-1)
             {
-                //verifico se o endere�o � nulo, se for, n�o h� como gravar
-                if(isEnderecoNull(existeArquivoOuDiretorio(disco, enderecoInodeGravacao, str.c_str())))
+                //verifico se o endereï¿½o ï¿½ nulo, se for, nï¿½o hï¿½ como gravar
+                if(verificarSeEnderecoEhInvalido(verificarExistenciaArquivoOuDiretorio(disco, enderecoInodeGravacao, str.c_str())))
                 {
                     possivelInserir = false;
                     break;
                 }
             }
-            enderecoInodeGravacao = cd(disco, enderecoInodeGravacao, str.c_str(), enderecoInodeRaiz, caminhoAux);
+            enderecoInodeGravacao = alterarDiretorio(disco, enderecoInodeGravacao, str.c_str(), localizacaoINodeRaiz, caminhoAux);
         }
         i++;
     }
 
-    if (possivelInserir && isEnderecoValido(enderecoInodeGravacao))
+    if (possivelInserir && verificarSeEnderecoEhValido(enderecoInodeGravacao))
     {
-        if (lastPosition(caminhoCompleto).size() <= MAX_NOME_ARQUIVO)
+        if (obterUltimaPosicao(caminhoCompleto).size() <= MAX_NOME_ARQUIVO)
         {
-            strcpy(nomeDiretorio, lastPosition(caminhoCompleto).c_str());
-            return addDiretorioEArquivo(disco, 'd', enderecoInodeGravacao, nomeDiretorio);
+            strcpy(nomeDiretorio, obterUltimaPosicao(caminhoCompleto).c_str());
+            return inserirDiretorioEArquivo(disco, 'd', enderecoInodeGravacao, nomeDiretorio);
         }
     }
     
-    return getEnderecoNull();
+    return obterEnderecoInvalido();
 }
+
